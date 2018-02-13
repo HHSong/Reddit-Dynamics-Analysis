@@ -3,6 +3,7 @@ import parser
 import sys
 import treeNode as tn
 from time import sleep
+from multiprocessing import Pool, Process, Manager
 from os import walk, path, makedirs
 
 sys.setrecursionlimit(50000)
@@ -146,14 +147,26 @@ def load(filename):
     return pickle.load(fileObject)
 
 
+def parallel_process(raw):
+    tree = parser.parse(
+        path.join(reddit_path, raw)
+    )
+    output_data[raw] = tree
+
+
+def multi_core():
+    global output_data
+    manager = Manager()
+    output_data = manager.dict()
+    pool = Pool(processes=4)
+    pool.map(parallel_process, list_raw_files())
+
+    save(output_data, path.join('output', "parallel.dat"))
+
+
 if __name__ == "__main__":
     # pre_process()
-    process(skip_processed=False)
-    post_process()
+    # process(skip_processed=False)
+    # post_process()
+    multi_core()
     pass
-
-
-# tree = process_single('6ttui.html')
-# edges = to_edges(tree)
-# for e in edges:
-#     print(e)
