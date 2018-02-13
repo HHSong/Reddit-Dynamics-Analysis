@@ -14,7 +14,6 @@ chunk_path = path.join("..", "chunk{}")
 processed = []
 output_data = {}
 
-
 def list_files(dir_path):
     files = []
     for (dirpath, dirnames, filenames) in walk(dir_path):
@@ -44,31 +43,28 @@ def pre_process():
     print("processed:" + str(processed))
 
 
-def process(skip_processed=True):
+def process(raws, skip_processed=True):
     failed = []
-    total = len(list_raw_files())
+    total = len(raws)
     count = 0
     percentage = 1
-    for raw in list_raw_files():
+    for raw in raws():
         if skip_processed and raw in processed:
             continue
-        # sleep(0.2)
         count += 1
         if count > percentage * total / 1000:
             print('proccessed {}%'.format(percentage/10))
             percentage += 1
         try:
-            # print('processing: %s', raw)
             tree = parser.parse(
                 path.join(reddit_path, raw)
             )
             if tree == 'deleted':
                 continue
             for_each(tree)
-            output = raw.rsplit('.', 1)[0] + '.dat'
+            # output = raw.rsplit('.', 1)[0] + '.dat'
             # save(tree, output)
             output_data[raw] = tree
-
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
@@ -161,33 +157,54 @@ def prepend_path(dir, file):
     )
 
 
-def multi_core(chunk_number):
-    # global output_data
-    # manager = Manager()
-    # output_data = manager.dict()
-    pool = Pool(processes=4)
-    dir = chunk_path.format(chunk_number)
-    files = list_files(dir)
-    files = [prepend_path(dir, file) for file in files]
-    results = pool.imap_unordered(
-        parallel_process,
-        files
+def process_chunk(chunk_number):
+    raw_files = list_files(
+        chunk_path.format(chunk_number)
     )
-    output = []
+    process(raw_files, False)
+    save(
+        output_data,
+        path.join(
+            dump_path,
+            "chunk{}.out.dat".format(chunk_number)
+        )
+    )
+
+
+def multi_core(processes=4):
+    pool = Pool(processes=processes)
+    chunk_files(processes)
+    results = pool.imap_unordered(
+        process_chunk,
+        range(processes)
+    )
     pool.close()
     pool.join()
-    for result in results:
-        if result is None: continue
-        output.append(result)
-    save(output, path.join(dump_path, "chunk{}.dat".format(chunk_number)))
 
 
-def chunk_files():
+
+    # dir = chunk_path.format(chunk_number)
+    # files = list_files(dir)
+    # files = [prepend_path(dir, file) for file in files]
+    # results = pool.imap_unordered(
+    #     parallel_process,
+    #     files
+    # )
+    # output = []
+    # pool.close()
+    # pool.join()
+    # for result in results:
+    #     if result is None: continue
+    #     output.append(result)
+    # save(output, path.join(dump_path, "chunk{}.dat".format(chunk_number)))
+
+
+def chunk_files(number):
     files = list_raw_files()
     chunk = []
     count = 0
     for file in files:
-        if len(chunk) > len(files) / 10:
+        if len(chunk) > len(files) / number:
             move_files(chunk, chunk_path.format(count))
             count += 1
             chunk = []
@@ -214,7 +231,7 @@ if __name__ == "__main__":
     # pre_process()
     # process(skip_processed=False)
     # post_process()
-    multi_core(0)
+    multi_core(4)
     # chunk_files()
 
     print("execution time: {}s".format(
