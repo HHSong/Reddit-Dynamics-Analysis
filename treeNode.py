@@ -1,3 +1,5 @@
+from functools import reduce
+
 class TreeNode(object):
   def __init__(self):
     self.data = None
@@ -16,3 +18,22 @@ class TreeNode(object):
       'timestamp': self.timestamp,
       'children': self.children
       })
+
+  def non_direct_descendants(self):
+    distants = list(
+      map(
+        lambda child: child.descendants(),
+        self.children
+      )
+    )
+    if len(distants) == 0:
+      return []
+    return reduce(
+      lambda x, y: x + y,
+      distants
+    )
+
+
+
+  def descendants(self):
+    return self.children + self.non_direct_descendants()

@@ -11,7 +11,6 @@ def get_user(tag):
       return author_nodes[0].contents[0]
     except IndexError as err:
         raise RuntimeError(tag)
-  # return tag.select('a[class^=author]')[0].contents[0]
 
 def get_timestamp(tag):
   return tag.find('time')['title']
@@ -34,18 +33,9 @@ def get_comments(sitetable_parent):
     )
   return comments
 
+
 def get_children(comment):
   return get_comments(comment)
-  # child_node = list(
-  #   filter(
-  #     lambda div: 'child' in div['class'],
-  #     comment.contents
-  #     )
-  #   )[0]
-  # sitetables = child_node.contents
-  # if len(sitetables) == 0:
-  #   return []
-  # return sitetables[0].contents
 
 
 def init_tree_node(tag):
@@ -90,26 +80,11 @@ def parse(filename):
 
   # main post
   post = parse_post_entry(soup)
+  if post == deleted:
+    return deleted
 
   # comment section
   commentarea = get_comment_area(soup)
   parse_comment_area(post, commentarea)
-  print(post)
 
-
-
-
-file = "./6ttui.html"
-parse(file)
-
-
-# comments = soup.select('div[class^=thing]')
-# print(comments[0].prettify())
-
-# for comment in comments:
-#   entry = comment.find(attrs={'class':'entry'})
-#   nonCollapse = entry.find(attrs={'class':'noncollapsed'})
-#   content = nonCollapse.find('form').find('p').contents[0]
-#   if content == '[deleted]':
-#     continue
-#   print(content)
+  return post
