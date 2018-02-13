@@ -33,7 +33,18 @@ class TreeNode(object):
       distants
     )
 
-
-
   def descendants(self):
     return self.children + self.non_direct_descendants()
+
+class Edge(object):
+  def __init__(self):
+    self.master = None
+    self.slave = None
+    self.weight = None
+
+  def __str__(self):
+    return str({
+      'master': self.master,
+      'slave': self.slave,
+      'weight': self.weight
+    })
