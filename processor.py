@@ -48,7 +48,7 @@ def process(raws, skip_processed=True):
     total = len(raws)
     count = 0
     percentage = 1
-    for raw in raws():
+    for raw in raws:
         if skip_processed and raw in processed:
             continue
         count += 1
@@ -57,7 +57,7 @@ def process(raws, skip_processed=True):
             percentage += 1
         try:
             tree = parser.parse(
-                path.join(reddit_path, raw)
+                raw
             )
             if tree == 'deleted':
                 continue
@@ -72,10 +72,10 @@ def process(raws, skip_processed=True):
             failed.append(raw)
 
 
-def process_single(raw):
-    return parser.parse(
-        path.join(reddit_path, raw)
-    )
+# def process_single(raw):
+#     return parser.parse(
+#         path.join(reddit_path, raw)
+#     )
 
 
 def for_each(tree):
@@ -158,10 +158,18 @@ def prepend_path(dir, file):
 
 
 def process_chunk(chunk_number):
+    dir = chunk_path.format(chunk_number)
     raw_files = list_files(
-        chunk_path.format(chunk_number)
+        dir
     )
-    process(raw_files, False)
+    process(
+        [
+            prepend_path(
+                dir, raw
+            ) for raw in raw_files
+        ],
+        False
+    )
     save(
         output_data,
         path.join(
