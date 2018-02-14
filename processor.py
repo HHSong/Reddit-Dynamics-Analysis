@@ -291,17 +291,77 @@ def move_files(files, folder):
         )
 
 
+def read_tree_data():
+    files = filter(
+        lambda file: file not in ["filenamesInEachChunks.dat", "data.edges"],
+        list_dumped_files()
+    )
+    results = []
+    for file in files:
+        data = load(
+            path.join(
+                dump_path,
+                file
+            )
+        )
+        results.extend(data)
+    return results
+
+
+def edges_to_file(edges):
+    save(
+        edges,
+        path.join(
+            dump_path,
+            "data.edges"
+        )
+    )
+
+def flatten_tree_data(data):
+    trees = []
+    for d in data:
+        for filename, tree in d.items():
+            trees.append(tree)
+    return trees
+
+
 if __name__ == "__main__":
     start = time()
     # chunk_files(30)
 
-    multi_core(0, 3, 4)
+    # multi_core(16, 19, 4)
+
+    trees = flatten_tree_data(
+        read_tree_data()
+    )
+
+    print('number of trees: {}'.format(len(trees)))
+
+    # convert trees to edges
+    edges = []
+    for tree in trees:
+        edges.extend(to_edges(tree))
+
+
+    print('number of edges: {}'.format(len(edges)))
+
+    # save to file
+    edges_to_file(edges)
+
+    # load edges
+    # edges = load(
+    #     path.join(
+    #         dump_path,
+    #         "data.edges"
+    #     )
+    # )
+    # print(edges[0])
 
     print("execution time: {}s".format(
         time() - start
     ))
 
-    # data = load(
-    #     "processed_chunk0_3.dat"
-    # )
-    # print(data)
+# data = load(
+#     "processed_chunk0_3.dat"
+# )
+# print(data)
