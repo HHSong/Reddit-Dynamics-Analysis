@@ -8,7 +8,7 @@ def get_user(tag):
       author_nodes = tag.select('a[class^=author]')
       if len(author_nodes) == 0:
           return deleted
-      return author_nodes[0].contents[0]
+      return str(author_nodes[0].contents[0])
     except IndexError as err:
         raise RuntimeError(tag)
 
@@ -78,13 +78,16 @@ def parse(filename):
   with open(filename) as fp:
     soup = BeautifulSoup(fp, "lxml")
 
-  # main post
-  post = parse_post_entry(soup)
-  if post == deleted:
-    return deleted
+    # main post
+    post = parse_post_entry(soup)
+    if post == deleted:
+      fp.close()
+      return deleted
 
-  # comment section
-  commentarea = get_comment_area(soup)
-  parse_comment_area(post, commentarea)
+    # comment section
+    commentarea = get_comment_area(soup)
+    parse_comment_area(post, commentarea)
 
+  soup.decompose()
+  fp.close()
   return post

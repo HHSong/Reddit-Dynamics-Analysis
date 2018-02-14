@@ -3,8 +3,8 @@ import parser
 import sys
 import treeNode as tn
 import shutil
-from time import sleep, time
-from multiprocessing import Pool, Process, Manager
+from time import time
+from multiprocessing import Pool, Manager
 from os import walk, path, makedirs
 
 sys.setrecursionlimit(50000)
@@ -13,6 +13,8 @@ reddit_path = path.join("..", 'redditHtmlData')
 chunk_path = path.join("..", "chunk{}")
 processed = []
 output_data = {}
+numberOfCheckPoints = 5
+filenamesInEachChunks = {}
 
 def list_files(dir_path):
     files = []
@@ -48,12 +50,13 @@ def process(raws, skip_processed=True):
     total = len(raws)
     count = 0
     percentage = 1
+    results = {}
     for raw in raws:
         if skip_processed and raw in processed:
             continue
         count += 1
-        if count > percentage * total / 1000:
-            print('proccessed {}%'.format(percentage/10))
+        if count > percentage * total / 100:
+            print('proccessed {}%'.format(percentage))
             percentage += 1
         try:
             tree = parser.parse(
@@ -62,20 +65,20 @@ def process(raws, skip_processed=True):
             if tree == 'deleted':
                 continue
             for_each(tree)
-            # output = raw.rsplit('.', 1)[0] + '.dat'
-            # save(tree, output)
-            output_data[raw] = tree
+            results[raw] = tree
         except (KeyboardInterrupt, SystemExit):
+            print('error')
             raise
         except:
             print("error processing: " + raw)
             failed.append(raw)
+    return results
 
 
-# def process_single(raw):
-#     return parser.parse(
-#         path.join(reddit_path, raw)
-#     )
+def process_single(raw):
+    return parser.parse(
+        path.join(reddit_path, raw)
+    )
 
 
 def for_each(tree):
@@ -157,67 +160,121 @@ def prepend_path(dir, file):
     )
 
 
-def process_chunk(chunk_number):
-    dir = chunk_path.format(chunk_number)
-    raw_files = list_files(
-        dir
+def update_processed_chunks(chunk_number):
+    global processed
+    output_files = list_files(
+        chunk_path.format(chunk_number)
     )
-    process(
-        [
-            prepend_path(
-                dir, raw
-            ) for raw in raw_files
-        ],
-        False
-    )
-    save(
-        output_data,
-        path.join(
-            dump_path,
-            "chunk{}.out.dat".format(chunk_number)
+    dumped_file = list(
+        filter(
+            lambda f: f == "chunk{}_processed.dat".format(chunk_number),
+            output_files
         )
     )
-
-
-def multi_core(processes=4):
-    pool = Pool(processes=processes)
-    chunk_files(processes)
-    results = pool.imap_unordered(
-        process_chunk,
-        range(processes)
+    if len(dumped_file) == 0:
+        return None
+    processed = set(
+        load(dumped_file[0])
     )
-    pool.close()
-    pool.join()
+    print('processed chunks: %s', processed)
 
 
+def split_files(files):
+    split = []
+    step = len(files) / numberOfCheckPoints
+    next = step
+    result = []
+    for file in files:
+        if len(split) > next:
+            result.append(split)
+            split = []
+            next += step
+        split.append(file)
+    result.append(split)
+    return result
 
-    # dir = chunk_path.format(chunk_number)
-    # files = list_files(dir)
-    # files = [prepend_path(dir, file) for file in files]
-    # results = pool.imap_unordered(
-    #     parallel_process,
-    #     files
-    # )
-    # output = []
-    # pool.close()
-    # pool.join()
-    # for result in results:
-    #     if result is None: continue
-    #     output.append(result)
-    # save(output, path.join(dump_path, "chunk{}.dat".format(chunk_number)))
+
+def process_chunk(chunk_number):
+    try:
+        chunk_dir = chunk_path.format(chunk_number)
+        results = process(
+            [
+                prepend_path(
+                    chunk_dir, raw
+                ) for raw in filenamesInEachChunks[chunk_number]
+            ],
+            skip_processed=True
+        )
+        print('finished: chunk{}', chunk_number)
+        # print('results: {}', results)
+        return results
+    except:
+        print('error')
+
+
+def process_chunk_checkable(chunk_number):
+    update_processed_chunks(chunk_number)
+    chunk_dir = chunk_path.format(chunk_number)
+
+    splits = split_files(
+        list_files(chunk_dir)
+    )
+
+    for i in range(numberOfCheckPoints):
+        process(
+            [
+                prepend_path(
+                    chunk_dir, raw
+                ) for raw in splits[i]
+            ],
+            skip_processed=True
+        )
+        print('finished: chunk{}_split{}', chunk_number, i)
+
+
+def multi_core(starting_chunk, ending_chunk, processes=4):
+    global output_data
+    update_chunk_names()
+    chunks = list(range(starting_chunk, ending_chunk+1, 1))
+    with Pool(processes=processes) as pool:
+        r = pool.imap_unordered(
+                process_chunk,
+                chunks
+            )
+        pool.close()
+        pool.join()
+        results = list(r)
+        # output = dict(output_data)  # Manager().dict() is not pickle-able since it's a proxy
+    save(
+        results,
+        "processed_chunk{}_{}.dat".format(starting_chunk, ending_chunk)
+    )
+    print("saved chunk{}_{}".format(starting_chunk, ending_chunk))
 
 
 def chunk_files(number):
+    global filenamesInEachChunks
     files = list_raw_files()
     chunk = []
     count = 0
     for file in files:
         if len(chunk) > len(files) / number:
             move_files(chunk, chunk_path.format(count))
+            filenamesInEachChunks[count] = chunk
             count += 1
             chunk = []
         chunk.append(file)
+    filenamesInEachChunks[count] = chunk
     move_files(chunk, chunk_path.format(count))
+    save(
+        filenamesInEachChunks,
+        "filenamesInEachChunks.dat"
+    )
+
+
+def update_chunk_names():
+    global filenamesInEachChunks
+    filenamesInEachChunks = load("filenamesInEachChunks.dat")
 
 
 def move_files(files, folder):
@@ -236,14 +293,15 @@ def move_files(files, folder):
 
 if __name__ == "__main__":
     start = time()
-    # pre_process()
-    # process(skip_processed=False)
-    # post_process()
-    multi_core(4)
-    # chunk_files()
+    # chunk_files(30)
+
+    multi_core(0, 3, 4)
 
     print("execution time: {}s".format(
         time() - start
     ))
-    pass
 
+    # data = load(
+    #     "processed_chunk0_3.dat"
+    # )
+    # print(data)

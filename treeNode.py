@@ -2,7 +2,6 @@ from functools import reduce
 
 class TreeNode(object):
   def __init__(self):
-    self.data = None
     self.id = None
     self.user = None
     self.timestamp = None
