@@ -16,7 +16,6 @@ sys.setrecursionlimit(50000)
 dump_path = path.join('..', 'output')
 reddit_path = path.join("..", 'redditHtmlData')
 chunk_path = path.join("..", "chunk{}")
-partition_path = "partition"
 processed = []
 filenamesInEachChunks = {}
 
@@ -125,8 +124,6 @@ def init_edge(master, slave, weight):
 def save(data, filename):
     if not path.exists(dump_path):
         makedirs(dump_path)
-    if not path.exists(partition_path):
-        makedirs(partition_path)
     filename = path.join(dump_path, filename)
     fileObject = open(filename, 'wb')
     pickle.dump(data, fileObject)
@@ -328,7 +325,7 @@ def partition_and_save(edges):
         save(
             patitions[i],
             path.join(
-                partition_path,
+                dump_path,
                 months[i].strftime("%Y-%m") + ".partition"
             )
         )
@@ -337,7 +334,7 @@ def partition_and_save(edges):
 def load_partition(date_string):
     return load(
         path.join(
-            partition_path,
+            dump_path,
             date_string + ".partition"
         )
     )
