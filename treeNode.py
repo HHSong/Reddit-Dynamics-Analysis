@@ -61,6 +61,13 @@ class Edge(object):
             'weight': self.weight,
             'category': self.category
         })
-
+    def getMaster(self):
+        return self.master
+    def getSlave(self):
+        return self.slave
+    def getWeight(self):
+        return self.weight
+    def getCat(self):
+        return self.category
     def __repr__(self):
         return self.__str__()
