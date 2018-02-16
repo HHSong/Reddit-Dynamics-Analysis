@@ -1,8 +1,13 @@
 import pickle
+
+import gc
+from datetime import datetime
+
 import parser
 import sys
 import treeNode as tn
 import shutil
+import partitioner
 from time import time
 from multiprocessing import Pool, Manager
 from os import walk, path, makedirs
@@ -11,10 +16,10 @@ sys.setrecursionlimit(50000)
 dump_path = path.join('..', 'output')
 reddit_path = path.join("..", 'redditHtmlData')
 chunk_path = path.join("..", "chunk{}")
+partition_path = "partition"
 processed = []
-output_data = {}
-numberOfCheckPoints = 5
 filenamesInEachChunks = {}
+
 
 def list_files(dir_path):
     files = []
@@ -64,10 +69,9 @@ def process(raws, skip_processed=True):
             )
             if tree == 'deleted':
                 continue
-            for_each(tree)
             results[raw] = tree
         except (KeyboardInterrupt, SystemExit):
-            print('error')
+            print('Interrupted!')
             raise
         except:
             print("error processing: " + raw)
@@ -77,19 +81,8 @@ def process(raws, skip_processed=True):
 
 def process_single(raw):
     return parser.parse(
-        path.join(reddit_path, raw)
+        raw
     )
-
-
-def for_each(tree):
-    # distants = tree.non_direct_descendants()
-    # descendants = tree.descendants()
-    pass
-
-
-def post_process():
-    save(output_data, "parsed_tree.dat")
-    pass
 
 
 def aggregate_edges(collection, edges):
@@ -104,11 +97,11 @@ def to_edges(tree):
     edges = []
     for desc in tree.non_direct_descendants():
         edges.append(
-            init_distant_edge(tree, desc)
+            init_edge(tree, desc, 1)
         )
     for child in tree.children:
         edges.append(
-            init_close_edge(tree, child)
+            init_edge(tree, child, 2)
         )
     for child in tree.children:
         edges.extend(
@@ -117,25 +110,23 @@ def to_edges(tree):
     return edges
 
 
-def init_distant_edge(master, slave):
+def init_edge(master, slave, weight):
     edge = tn.Edge()
     edge.master = master.user
     edge.slave = slave.user
-    edge.weight = 1
-    return edge
-
-
-def init_close_edge(master, slave):
-    edge = tn.Edge()
-    edge.master = master.user
-    edge.slave = slave.user
-    edge.weight = 2
+    edge.timestamp = string_to_datetime(
+        slave.timestamp
+    )
+    edge.category = master.category
+    edge.weight = weight
     return edge
 
 
 def save(data, filename):
     if not path.exists(dump_path):
         makedirs(dump_path)
+    if not path.exists(partition_path):
+        makedirs(partition_path)
     filename = path.join(dump_path, filename)
     fileObject = open(filename, 'wb')
     pickle.dump(data, fileObject)
@@ -148,50 +139,10 @@ def load(filename):
     return pickle.load(fileObject)
 
 
-def parallel_process(raw):
-    return parser.parse(
-        raw
-    )
-
-
 def prepend_path(dir, file):
     return path.join(
         dir, file
     )
-
-
-def update_processed_chunks(chunk_number):
-    global processed
-    output_files = list_files(
-        chunk_path.format(chunk_number)
-    )
-    dumped_file = list(
-        filter(
-            lambda f: f == "chunk{}_processed.dat".format(chunk_number),
-            output_files
-        )
-    )
-    if len(dumped_file) == 0:
-        return None
-    processed = set(
-        load(dumped_file[0])
-    )
-    print('processed chunks: %s', processed)
-
-
-def split_files(files):
-    split = []
-    step = len(files) / numberOfCheckPoints
-    next = step
-    result = []
-    for file in files:
-        if len(split) > next:
-            result.append(split)
-            split = []
-            next += step
-        split.append(file)
-    result.append(split)
-    return result
 
 
 def process_chunk(chunk_number):
@@ -212,39 +163,17 @@ def process_chunk(chunk_number):
         print('error')
 
 
-def process_chunk_checkable(chunk_number):
-    update_processed_chunks(chunk_number)
-    chunk_dir = chunk_path.format(chunk_number)
-
-    splits = split_files(
-        list_files(chunk_dir)
-    )
-
-    for i in range(numberOfCheckPoints):
-        process(
-            [
-                prepend_path(
-                    chunk_dir, raw
-                ) for raw in splits[i]
-            ],
-            skip_processed=True
-        )
-        print('finished: chunk{}_split{}', chunk_number, i)
-
-
 def multi_core(starting_chunk, ending_chunk, processes=4):
-    global output_data
     update_chunk_names()
     chunks = list(range(starting_chunk, ending_chunk+1, 1))
     with Pool(processes=processes) as pool:
-        r = pool.imap_unordered(
+        dictionary_of_trees = pool.imap_unordered(
                 process_chunk,
                 chunks
             )
         pool.close()
         pool.join()
-        results = list(r)
-        # output = dict(output_data)  # Manager().dict() is not pickle-able since it's a proxy
+        results = list(dictionary_of_trees)
     save(
         results,
         "processed_chunk{}_{}.dat".format(starting_chunk, ending_chunk)
@@ -305,7 +234,7 @@ def read_tree_data():
             )
         )
         results.extend(data)
-    return results
+    return flatten_tree_data(results)
 
 
 def edges_to_file(edges):
@@ -317,51 +246,117 @@ def edges_to_file(edges):
         )
     )
 
+
+def string_to_datetime(string):
+    return datetime.strptime(
+        string,
+        #'Sat Sep 22 01:26:16 2012 UTC'
+        "%a %b %d %H:%M:%S %Y %Z"
+    )
+
+
+def convert_trees_to_edges(trees):
+    edges = []
+    for tree in trees:
+        edges.extend(to_edges(tree))
+    return edges
+
+
 def flatten_tree_data(data):
     trees = []
     for d in data:
+        if not (isinstance(d, dict)):
+            print("none dictionary found: {}".format(d))
+            continue
         for filename, tree in d.items():
             trees.append(tree)
     return trees
 
 
-if __name__ == "__main__":
-    start = time()
-    # chunk_files(30)
-
-    # multi_core(16, 19, 4)
-
-    trees = flatten_tree_data(
-        read_tree_data()
+def load_edges():
+    return load(
+        path.join(
+            dump_path,
+            "data.edges"
+        )
     )
 
-    print('number of trees: {}'.format(len(trees)))
 
-    # convert trees to edges
-    edges = []
-    for tree in trees:
-        edges.extend(to_edges(tree))
+def stat(edges):
+    weights = {}
+    for e in edges:
+        weights[e.weight] = weights.get(e.weight, 1) + 1
+    for k, v in weights.items():
+        print('{} edges of weight {}'.format(v, k))
 
 
-    print('number of edges: {}'.format(len(edges)))
+def multi_core_starter(start, end, processors):
+    while (start <= end):
+        print("starting {} to {}".format(start, start + processors - 1))
+        multi_core(start, start + processors - 1)
+        start += processors
+        gc.collect()
 
-    # save to file
-    edges_to_file(edges)
 
-    # load edges
-    # edges = load(
-    #     path.join(
-    #         dump_path,
-    #         "data.edges"
-    #     )
-    # )
-    # print(edges[0])
+def load_trees_convert_and_save(filename):
+    trees = read_tree_data()
+    edges = convert_trees_to_edges(trees)
+    save(
+        edges,
+        path.join(
+            dump_path,
+            filename
+        )
+    )
+
+
+def partition_and_save(edges):
+    start_date = datetime(2012, 11, 1)
+    end_date = datetime(2013, 2, 1)
+    patitions = partitioner.partition_by_date(
+        edges,
+        start_date,
+        end_date,
+        4
+    )
+    months = partitioner.list_of_months(
+        start_date,
+        end_date,
+        4
+    )
+    for i in range(len(months)-1):
+        save(
+            patitions[i],
+            path.join(
+                partition_path,
+                months[i].strftime("%Y-%m") + ".partition"
+            )
+        )
+
+
+def load_partition(date_string):
+    return load(
+        path.join(
+            partition_path,
+            date_string + ".partition"
+        )
+    )
+
+
+if __name__ == "__main__":
+    start = time()
+
+    edges = load_partition("2008-07")
+    stat(edges)
+
+
+    collected = {}
+    aggregate_edges(collected, edges)
+
+    print(collected)
+
 
     print("execution time: {}s".format(
         time() - start
     ))
 
-# data = load(
-#     "processed_chunk0_3.dat"
-# )
-# print(data)
