@@ -23,7 +23,7 @@ def toXGraph(filename):
             G.node[Slave]['category'] = Cat
 
     partition = community.best_partition(G)
-    print(partition)
+    #print(partition)
     size = float(len(set(partition.values())))
     pos = nx.spring_layout(G)
     count = 0.
@@ -35,7 +35,45 @@ def toXGraph(filename):
                                 node_color = str(count / size))
          nx.draw_networkx_edges(G, pos, alpha=0.5)
  #   nx.draw(G)
-    plt.show(G)
+ #   plt.show(G)
+    return (partition,G)
+def numCluster(partition):
+    '''
+finds number of clusters in graph
+'''
+    count = 0
+    for each in partition:
+        if partition[each] > count:
+            count = partition[each]
+
+    #print(count)
+    return count + 1
+    
+def getCategory(partition,cluster,G):
+    '''
+Finds the categories for each cluster and prints out the uniq categories and the number of occurences
+of that category for each structure. Also prints total number o fusers
+'''
+    numClust = numCluster(partition)
+    categories = [[] for i in range(numClust)]
+    uniq = []
+    for each in partition:
+        categories[partition[each]].append(G.node[each]['category'])
+    for i in range (numClust):
+        uniq.append(set(categories[i]))
+    Total = 0
+    Val = [[] for i in range(numClust)]
+    for i in range (0,numClust):
+        for each in uniq[i]:
+            Total += categories[i].count(each)
+            Val[i].append((each, categories[i].count(each)))
+            #print("cluster", i, ": ", each, categories[i].count(each))
+
+    for i in range(0,numClust):
+        Val[i] = sorted(Val[i],key=lambda x: x[1],reverse=True)
+        print("cluster", i, ": ", Val[i])
+    print("total number of users: ",Total)
+    return Val
 
 def main():
     parser = argparse.ArgumentParser()
@@ -43,8 +81,10 @@ def main():
     args = parser.parse_args()
     if args.file:
         filename = args.file                     
-        toXGraph(filename)
-
+        capture = toXGraph(filename)
+        partition = capture[0]
+        G = capture[1]
+        getCategory(partition,1,G)
 
 if __name__ == '__main__':
     main()
