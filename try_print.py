@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import argparse
 import os
 import community
+import processor
 
 '''
 Given a commandline file input of the snapshot, draws a graph of the communities
@@ -14,13 +15,16 @@ def toXGraph(filename):
     G=nx.Graph()
     with open(os.path.join("output",filename), 'rb') as f:
         tmp_list = pickle.load(f)
+        tmp_list = processor.aggregate_edges(tmp_list)
+        #print(tmp_list)
         for i in range (0,len(tmp_list)):
-            Master = tmp_list[i].getMaster()
-            Slave = tmp_list[i].getSlave()
-            Cat = tmp_list[i].getCat()
+            Master = tmp_list[i].getMaster()['id']
+            Slave = tmp_list[i].getSlave()['id']
+            CatM = tmp_list[i].getMaster()['categories']
+            CatS = tmp_list[i].getSlave()['categories']
             G.add_weighted_edges_from([(Master,Slave,tmp_list[i].getWeight())])
-            G.node[Master]['category'] = Cat
-            G.node[Slave]['category'] = Cat
+            G.node[Master]['category'] = CatM
+            G.node[Slave]['category'] = CatS
 
     partition = community.best_partition(G)
     #print(partition)
@@ -60,6 +64,8 @@ of that category for each structure. Also prints total number o fusers
     for each in partition:
         categories[partition[each]].append(G.node[each]['category'])
     for i in range (numClust):
+        flat_list = [item for category in categories[i] for item in category]
+        categories[i] = flat_list
         uniq.append(set(categories[i]))
     Total = 0
     Val = [[] for i in range(numClust)]
@@ -67,13 +73,16 @@ of that category for each structure. Also prints total number o fusers
         for each in uniq[i]:
             Total += categories[i].count(each)
             Val[i].append((each, categories[i].count(each)))
-            #print("cluster", i, ": ", each, categories[i].count(each))
-
     for i in range(0,numClust):
         Val[i] = sorted(Val[i],key=lambda x: x[1],reverse=True)
         print("cluster", i, ": ", Val[i])
-    print("total number of users: ",Total)
     return Val
+def getTotal(partition):
+    count = 0
+    for each in partition:
+        count+=1
+    print("Total Users:",count)
+    return count
 
 def main():
     parser = argparse.ArgumentParser()
@@ -85,6 +94,7 @@ def main():
         partition = capture[0]
         G = capture[1]
         getCategory(partition,1,G)
+        getTotal(partition)
 
 if __name__ == '__main__':
     main()
