@@ -30,3 +30,36 @@ def percentage_of(cluster_dict, numNewCluster, user_dict):
         for i in range(numCluster):
             tmp[cluster, i] /= numUsers
     return res
+
+def print_(res, flag):
+    string = ""
+    string2 = ""
+    if flag:
+        string = "goes to"
+        string2 = "in the newer snapshot"
+    else:
+        string = "comes from"
+        string2 = "in the older snapshot"
+    for denom, numer in res:
+        print("{0:.2f}% of cluster {1} {2} cluster {3} {4}".format(
+            res[denom, numer] * 100, denom, string, numer, string2))
+
+def print_old_to_new(res):
+    print("Breakdown of dests of users in the older snapshot")
+    print("-------------------------------------------------")
+    print_(res, True)
+
+def print_new_from_old(res):
+    print("Breakdown of srcs of users in the newer snapshot")
+    print("------------------------------------------------")
+    print_(res, False)
+
+''' 
+Print functions added a typical use case looks as follows:
+Assume we have the output of louvain algo of two consecutive snapshots
+ output1 and output2
+
+cluster_dict1, cluster_dict2 = create_newdict(output1, output2)
+print_old_to_new(percentage_of(cluster_dict1, len(cluster_dict2), output2))
+print_new_from_old(percentage_of(cluster_dict2, len(cluster_dict1), output1)))
+'''
