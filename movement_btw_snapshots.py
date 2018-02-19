@@ -31,12 +31,12 @@ def percentage_of(cluster_dict, numNewCluster, user_dict):
     res = {}
     for cluster in cluster_dict:
         numUsers = len(cluster_dict[cluster])
-        for i in range(numNewCluster):
+        for i in range(numNewCluster + 1):
             res[cluster, i] = 0
         for user in cluster_dict[cluster]:
             if user in user_dict:
                 res[cluster, user_dict[user]] += 1
-        for i in range(numNewCluster):
+        for i in range(numNewCluster + 1):
             res[cluster, i] /= numUsers
     return res
 
