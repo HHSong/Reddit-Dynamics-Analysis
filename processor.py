@@ -84,12 +84,50 @@ def process_single(raw):
     )
 
 
-def aggregate_edges(collection, edges):
+def aggregate_edges(edges):
+    results = []
+    categories = aggregate_categories(edges)
+    for pair, weight in aggregate_weights(edges).items():
+        users = list(pair)
+        node = tn.Edge()
+        node.master = {
+            'id': users[0],
+            'categories': categories[users[0]]
+        }
+        node.slave = {
+            'id': users[1],
+            'categories': categories[users[1]]
+        }
+        node.weight = weight
+        results.append(node)
+    return results
+
+
+def aggregate_categories(edges):
+    collection = {}
     for edge in edges:
-        key = frozenset([edge.master, edge.slave])
+        key = edge.master
         if key not in collection:
-            collection[key] = 0
-        collection[key] += 1
+            collection[key] = []
+        collection[key].append(edge.category)
+        key = edge.slave
+        if key not in collection:
+            collection[key] = []
+        collection[key].append(edge.category)
+    categories = {}
+    for user, items in collection.items():
+        categories[user] = list(set(items))
+    return categories
+
+
+def aggregate_weights(edges):
+    collection = {}
+    for edge in edges:
+        if edge.master == edge.slave:
+            continue
+        key = frozenset([edge.master, edge.slave])
+        collection[key] = collection.get(key, 0) + edge.weight
+    return collection
 
 
 def to_edges(tree):
@@ -340,17 +378,31 @@ def load_partition(date_string):
     )
 
 
+def test_edges():
+    edges = []
+    e = tn.Edge()
+    e.master = "a"
+    e.slave = "b"
+    e.category = "joke"
+    edges.append(e)
+    e = tn.Edge()
+    e.master = "c"
+    e.slave = "a"
+    e.category = "pandas"
+    edges.append(e)
+    return edges
+
+
 if __name__ == "__main__":
     start = time()
 
-    edges = load_partition("2008-07")
+    edges = load_partition("2008-11")
     stat(edges)
 
+    collected = aggregate_edges(edges)
 
-    collected = {}
-    aggregate_edges(collected, edges)
-
-    print(collected)
+    for collected_edge in collected:
+        print(collected_edge)
 
 
     print("execution time: {}s".format(
