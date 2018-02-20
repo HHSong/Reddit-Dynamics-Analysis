@@ -51,7 +51,7 @@ def print_(res, flag):
         string2 = "in the older snapshot"
     for denom, numer in res:
         if res[denom, numer] > 0:
-            print("{0:.2f}% of cluster {1} {2} cluster {3} {4}".format(
+            print("{0:05.2f}% of cluster {1} {2} cluster {3} {4}".format(
                 res[denom, numer] * 100, denom, string, numer, string2))
 
 def print_old_to_new(res):
