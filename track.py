@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import argparse
 import os
 import community
+import array
 import movement_btw_snapshots as mov
 import try_print as tprint
 from networkx import bipartite
@@ -23,7 +24,7 @@ def tracker(filename):
                 newline = newline[1].split()
                 clustera = newline[2]
                 clusterb = newline[6]
-                G.add_node(clustera+'A', bipartite = 0,color = 'blue')
+                G.add_node(clustera+'A', bipartite = 0, color='blue')
                 G.add_node(clusterb+'B', bipartite = 1, color='red')
                 G.add_weighted_edges_from([(clustera+'A',clusterb+'B',amount)])
     #l, r = nx.bipartite.sets(G)
@@ -31,13 +32,27 @@ def tracker(filename):
  #   pos.update((node, (1, index)) for index, node in enumerate(l))
  #   pos.update((node, (2, index)) for index, node in enumerate(r))
     node_color = []
+    pos = {}
+    numBlue = 0
+    numRed = 0
+    yBlue = -1
+    yRed = -1
     for node in G.nodes(data=True):
         if 'blue' in node[1]['color']:
             node_color.append('blue')
-            
+            numBlue += 1   
         else:
             node_color.append('red')
-    pos = nx.circular_layout(G)
+            numRed += 1
+    yDistBlue : float = 2.0 / numBlue
+    yDistRed : float = 2.0 / numRed
+    for node in G.nodes(data=True):
+        if node[1]['color'] == 'blue':
+            pos[node[0]] = array.array('f', [-0.5, yBlue])
+            yBlue += yDistBlue
+        else:
+            pos[node[0]] = array.array('f', [0.5, yRed])
+            yRed += yDistRed
     print(pos)
     nx.draw(G, pos=pos, with_labels=False, node_size=25, node_color=node_color)
     plt.show(G)
