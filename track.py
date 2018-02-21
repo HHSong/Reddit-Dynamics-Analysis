@@ -37,7 +37,8 @@ def tracker(filename):
             
         else:
             node_color.append('red')
-    nx.draw(G, with_labels=False, node_size=25, node_color=node_color)
+    pos = nx.circular_layout(G)
+    nx.draw(G, pos=pos, with_labels=False, node_size=25, node_color=node_color)
     plt.show(G)
 
 
