@@ -6,6 +6,7 @@ import argparse
 import os
 import community
 import movement_btw_snapshots as mov
+import try_print as tprint
 
 '''
 Given a commandline file input of the snapshot, draws a graph of the communities
@@ -40,6 +41,9 @@ def toXGraph(filename):
     #nx.draw(G)
  #   plt.show(G)
 def compare(dict1,dict2):
+    '''
+ Takes in two partitions and returns the similar users in both clusters
+'''
     d1 = set(dict1)
     d2 = set(dict2)
     G1=nx.Graph()
@@ -51,7 +55,7 @@ def compare(dict1,dict2):
  #   nx.draw(G1)
  #   nx.draw_networkx_labels(G1,pos,font_size=5,font_family='sans-serif')
  #   plt.show(G1)
-
+    
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f1','--file1',help = 'Specifies a particular input file to test')
@@ -64,8 +68,8 @@ def main():
         dict2 = toXGraph(filename2)
  #       compare(dict1,dict2)
         output = mov.create_newdict(dict1,dict2)
-        res = mov.percentage_of(output[1],11,output[0])
-        print(res)
+        res = mov.percentage_of(output[1],tprint.numCluster(dict2),output[0])
+ #       print(res)
         mov.print_old_to_new(res)
         mov.print_new_from_old(res)
             
