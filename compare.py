@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import argparse
 import os
 import community
+import movement_btw_snapshots as mov
 
 '''
 Given a commandline file input of the snapshot, draws a graph of the communities
@@ -61,7 +62,12 @@ def main():
         filename2 = args.file2                       
         dict1 = toXGraph(filename1)
         dict2 = toXGraph(filename2)
-        compare(dict1,dict2)
+ #       compare(dict1,dict2)
+        output = mov.create_newdict(dict1,dict2)
+        res = mov.percentage_of(output[1],11,output[0])
+        print(res)
+        mov.print_old_to_new(res)
+        mov.print_new_from_old(res)
             
 
 

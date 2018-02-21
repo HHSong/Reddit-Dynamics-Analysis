@@ -7,6 +7,7 @@ import os
 import community
 import processor
 
+
 '''
 Given a commandline file input of the snapshot, draws a graph of the communities
 using louvain's algorithm
