@@ -68,9 +68,10 @@ def main():
         dict2 = toXGraph(filename2)
  #       compare(dict1,dict2)
         output = mov.create_newdict(dict1,dict2)
-        res = mov.percentage_of(output[1],tprint.numCluster(dict2),output[0])
+        res = mov.percentage_of(output[0],len(output[1]),dict2)
  #       print(res)
         mov.print_old_to_new(res)
+        res = mov.percentage_of(output[1],len(output[0]),dict1)
         mov.print_new_from_old(res)
             
 
