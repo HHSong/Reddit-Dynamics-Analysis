@@ -74,6 +74,7 @@ def main():
         filename2 = args.file2                       
         dict1 = toXGraph(filename1)
         dict2 = toXGraph(filename2)
+        print(common_user_percentage(dict1,dict2))
  #       compare(dict1,dict2)
         output = mov.create_newdict(dict1,dict2)
         res = mov.percentage_of(output[0],len(output[1]),dict2)
@@ -81,6 +82,7 @@ def main():
         mov.print_old_to_new(res)
         res = mov.percentage_of(output[1],len(output[0]),dict1)
         mov.print_new_from_old(res)
+      
             
 
 
