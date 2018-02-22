@@ -58,34 +58,90 @@ def compare(dict1,dict2):
 
 def common_user_percentage(first, second):
     """Takes in two partitions and returns the similar users in both clusters"""
-    d1 = set(first)
-    d2 = set(second)
-    common = len(d1.intersection(d2))
-    return common / len(second)
+    users1 = []
+    for edge in first:
+        users1.append(edge.master)
+        users1.append(edge.slave)
+    set1 = set(users1)
+    users2 = []
+    for edge in second:
+        users2.append(edge.master)
+        users2.append(edge.slave)
+    set2 = set(users2)
+
+    common = len(set1.intersection(set2))
+    result = {
+        'percentage':  common / len(set2),
+        'common': common,
+        'second': len(set2)
+    }
+    return result
+
+
+def load(filename):
+    filename = os.path.join(
+        "../output",
+        filename
+    )
+    fileObject = open(filename, 'rb')
+    return pickle.load(fileObject)
+
+
+def partition_stats():
+    parts = [
+        '2008-07.partition',
+        '2008-11.partition',
+        '2009-03.partition',
+        '2009-07.partition',
+        '2009-11.partition',
+        '2010-03.partition',
+        '2010-07.partition',
+        '2010-11.partition',
+        '2011-03.partition',
+        '2011-07.partition',
+        '2011-11.partition',
+        '2012-03.partition',
+        '2012-07.partition',
+        '2012-11.partition'
+    ]
+    stats = {}
+    data = []
+    for partition in parts:
+        data.append(load(partition))
+    for i in range(len(parts)-1):
+        stats[parts[i]] = common_user_percentage(data[i], data[i+1])
+
+    for file, stat in stats.items():
+        print(file, stat)
+
+
+partition_stats()
+
+
 
     
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f1','--file1',help = 'Specifies a particular input file to test')
-    parser.add_argument('-f2','--file2',help = 'Specifies a particular input file to test')
-    args = parser.parse_args()
-    if args.file1 and args.file2:
-        filename1 = args.file1
-        filename2 = args.file2                       
-        dict1 = toXGraph(filename1)
-        dict2 = toXGraph(filename2)
- #       compare(dict1,dict2)
-        output = mov.create_newdict(dict1,dict2)
-        res = mov.percentage_of(output[0],len(output[1]),dict2)
- #       print(res)
-        mov.print_old_to_new(res)
-        res = mov.percentage_of(output[1],len(output[0]),dict1)
-        mov.print_new_from_old(res)
-            
-
-
-if __name__ == '__main__':
-    main()
+# def main():
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('-f1','--file1',help = 'Specifies a particular input file to test')
+#     parser.add_argument('-f2','--file2',help = 'Specifies a particular input file to test')
+#     args = parser.parse_args()
+#     if args.file1 and args.file2:
+#         filename1 = args.file1
+#         filename2 = args.file2
+#         dict1 = toXGraph(filename1)
+#         dict2 = toXGraph(filename2)
+#  #       compare(dict1,dict2)
+#         output = mov.create_newdict(dict1,dict2)
+#         res = mov.percentage_of(output[0],len(output[1]),dict2)
+#  #       print(res)
+#         mov.print_old_to_new(res)
+#         res = mov.percentage_of(output[1],len(output[0]),dict1)
+#         mov.print_new_from_old(res)
+#
+#
+#
+# if __name__ == '__main__':
+#     main()
 '''
 G=nx.Graph()
 G.add_node("hi")
