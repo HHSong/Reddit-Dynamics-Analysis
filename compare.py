@@ -55,6 +55,14 @@ def compare(dict1,dict2):
  #   nx.draw(G1)
  #   nx.draw_networkx_labels(G1,pos,font_size=5,font_family='sans-serif')
  #   plt.show(G1)
+
+def common_user_percentage(first, second):
+    """Takes in two partitions and returns the similar users in both clusters"""
+    d1 = set(first)
+    d2 = set(second)
+    common = len(d1.intersection(d2))
+    return common / len(second)
+
     
 def main():
     parser = argparse.ArgumentParser()
