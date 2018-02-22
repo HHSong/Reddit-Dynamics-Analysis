@@ -11,6 +11,9 @@ import try_print as tprint
 from networkx import bipartite
 
 def tracker(filename):
+    '''
+Takes a rtf file with the old cluster to new cluster stdout percentages adn converts to a bipartite graph
+'''
     str = '&'
     new_str = str.replace('&', '\&')
     G=nx.Graph()
@@ -27,10 +30,6 @@ def tracker(filename):
                 G.add_node(clustera+'A', bipartite = 0, color='blue')
                 G.add_node(clusterb+'B', bipartite = 1, color='red')
                 G.add_weighted_edges_from([(clustera+'A',clusterb+'B',amount)])
-    #l, r = nx.bipartite.sets(G)
- #   pos = {}
- #   pos.update((node, (1, index)) for index, node in enumerate(l))
- #   pos.update((node, (2, index)) for index, node in enumerate(r))
     node_color = []
     pos = {}
     numBlue = 0
@@ -53,7 +52,7 @@ def tracker(filename):
         else:
             pos[node[0]] = array.array('f', [0.5, yRed])
             yRed += yDistRed
-    print(pos)
+ #   print(pos)
     nx.draw(G, pos=pos, with_labels=False, node_size=25, node_color=node_color)
     plt.show(G)
 

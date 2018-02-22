@@ -115,33 +115,30 @@ def partition_stats():
         print(file, stat)
 
 
-partition_stats()
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f1','--file1',help = 'Specifies a particular input file to test')
+    parser.add_argument('-f2','--file2',help = 'Specifies a particular input file to test')
+    args = parser.parse_args()
+    if args.file1 and args.file2:
+        filename1 = args.file1
+        filename2 = args.file2
+        dict1 = toXGraph(filename1)
+        dict2 = toXGraph(filename2)
+        print(common_user_percentage(dict1,dict2))
+ #       compare(dict1,dict2)
+        output = mov.create_newdict(dict1,dict2)
+        res = mov.percentage_of(output[0],len(output[1]),dict2)
+ #       print(res)
+        mov.print_old_to_new(res)
+        res = mov.percentage_of(output[1],len(output[0]),dict1)
+        mov.print_new_from_old(res)
 
 
 
-    
-# def main():
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument('-f1','--file1',help = 'Specifies a particular input file to test')
-#     parser.add_argument('-f2','--file2',help = 'Specifies a particular input file to test')
-#     args = parser.parse_args()
-#     if args.file1 and args.file2:
-#         filename1 = args.file1
-#         filename2 = args.file2
-#         dict1 = toXGraph(filename1)
-#         dict2 = toXGraph(filename2)
-#  #       compare(dict1,dict2)
-#         output = mov.create_newdict(dict1,dict2)
-#         res = mov.percentage_of(output[0],len(output[1]),dict2)
-#  #       print(res)
-#         mov.print_old_to_new(res)
-#         res = mov.percentage_of(output[1],len(output[0]),dict1)
-#         mov.print_new_from_old(res)
-#
-#
-#
-# if __name__ == '__main__':
-#     main()
+
+if __name__ == '__main__':
+    main()
 '''
 G=nx.Graph()
 G.add_node("hi")
