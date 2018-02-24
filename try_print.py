@@ -6,7 +6,7 @@ import argparse
 import os
 import community
 import processor
-
+from collections import Counter
 
 '''
 Given a commandline file input of the snapshot, draws a graph of the communities
@@ -29,19 +29,20 @@ def toXGraph(filename):
 
     partition = community.best_partition(G)
     #print(partition)
-    size = float(len(set(partition.values())))
-    pos = nx.spring_layout(G)
-    count = 0.
-    for com in set(partition.values()) :
-         count += 1.
-         list_nodes = [nodes for nodes in partition.keys()
-                        if partition[nodes] == com]
-         nx.draw_networkx_nodes(G, pos, list_nodes, node_size = 20,
-                                node_color = str(count / size))
-         nx.draw_networkx_edges(G, pos, alpha=0.5)
+    #size = float(len(set(partition.values())))
+    #pos = nx.spring_layout(G)
+    #count = 0.
+    #for com in set(partition.values()) :
+    #     count += 1.
+    #     list_nodes = [nodes for nodes in partition.keys()
+    #                    if partition[nodes] == com]
+    #     nx.draw_networkx_nodes(G, pos, list_nodes, node_size = 20,
+    #                            node_color = str(count / size))
+    #     nx.draw_networkx_edges(G, pos, alpha=0.5)
  #   nx.draw(G)
  #   plt.show(G)
     return (partition,G)
+
 def numCluster(partition):
     '''
 finds number of clusters in graph
@@ -54,7 +55,7 @@ finds number of clusters in graph
     #print(count)
     return count + 1
     
-def getCategory(partition,cluster,G):
+def getCategory(partition,G):
     '''
 Finds the categories for each cluster and prints out the uniq categories and the number of occurences
 of that category for each structure. Also prints total number o fusers
@@ -70,20 +71,30 @@ of that category for each structure. Also prints total number o fusers
         uniq.append(set(categories[i]))
     Total = 0
     Val = [[] for i in range(numClust)]
-    for i in range (0,numClust):
+    for i in range (0, numClust):
         for each in uniq[i]:
             Total += categories[i].count(each)
             Val[i].append((each, categories[i].count(each)))
-    for i in range(0,numClust):
-        Val[i] = sorted(Val[i],key=lambda x: x[1],reverse=True)
+    for i in range(0, numClust):
+        Val[i] = sorted(Val[i], key=lambda x: x[1], reverse=True)
         print("cluster", i, ": ", Val[i])
-    return Val
+
+def getAggregateCats(partition, G):
+    '''
+    Finds the top categories for each snapshot
+    '''
+    categories = []
+    for each in partition:
+        categories += G.node[each]['category']
+    c = Counter(categories)
+    print(c.most_common())
+
+
 def getTotal(partition):
     count = 0
     for each in partition:
-        count+=1
+        count += 1
     print("Total Users:",count)
-    return count
 
 def main():
     parser = argparse.ArgumentParser()
@@ -94,7 +105,8 @@ def main():
         capture = toXGraph(filename)
         partition = capture[0]
         G = capture[1]
-        getCategory(partition,1,G)
+        #getCategory(partition,G)
+        getAggregateCats(partition, G)
         getTotal(partition)
 
 if __name__ == '__main__':
