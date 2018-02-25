@@ -79,7 +79,8 @@ of that category for each structure. Also prints total number o fusers
         Val[i] = sorted(Val[i], key=lambda x: x[1], reverse=True)
         print("cluster", i, ": ", Val[i])
 
-def getAggregateCats(partition, G):
+
+def getAggregateCats(partition, G, filename):
     '''
     Finds the top categories for each snapshot
     '''
@@ -87,14 +88,23 @@ def getAggregateCats(partition, G):
     for each in partition:
         categories += G.node[each]['category']
     c = Counter(categories)
-    print(c.most_common())
+    cat_count = c.most_common()
+    total = sum(c.values())
+    cat_percentage = [(cat, count / total) for (cat, count) in cat_count]
+    dict_c = {}
+    dict_c['count'] = cat_count
+    dict_c['percentage'] = cat_percentage
+    dict_c['total'] = getTotal(partition)
+    pickle.dump(dict_c, open('./Stats/' + filename[:7] + '.lists', 'wb')) 
+    for (cat, count) in cat_count:
+        print(cat + ',{0:d},{1:.2f}%'.format(count, count / total * 100))
 
 
 def getTotal(partition):
     count = 0
     for each in partition:
         count += 1
-    print("Total Users:",count)
+    return count
 
 def main():
     parser = argparse.ArgumentParser()
@@ -106,8 +116,7 @@ def main():
         partition = capture[0]
         G = capture[1]
         #getCategory(partition,G)
-        getAggregateCats(partition, G)
-        getTotal(partition)
+        getAggregateCats(partition, G, filename)
 
 if __name__ == '__main__':
     main()
