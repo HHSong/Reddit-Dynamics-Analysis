@@ -95,7 +95,9 @@ def getAggregateCats(partition, G, filename):
     dict_c['count'] = cat_count
     dict_c['percentage'] = cat_percentage
     dict_c['total'] = getTotal(partition)
-    pickle.dump(dict_c, open('./Stats/' + filename[:7] + '.lists', 'wb')) 
+    if not os.path.isfile('./Stats/' + filename[:7] + '.lists'):
+        with open('./Stats/' + filename[:7] + '.lists', 'wb') as f:
+            pickle.dump(dict_c, f)
     for (cat, count) in cat_count:
         print(cat + ',{0:d},{1:.2f}%'.format(count, count / total * 100))
 

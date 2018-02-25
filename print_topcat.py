@@ -53,6 +53,7 @@ def plot_percentage_bar(files, data_dict, cat_list, col_list):
     plt.xticks(indices, files)
     plt.xlabel('snapshots')
     plt.legend(loc='best', bbox_to_anchor=(1, 1), ncol=1)
+    plt.title('Percentage Frequency Distribution of Interactions in Different Subreddits')
     plt.show()
 
 
