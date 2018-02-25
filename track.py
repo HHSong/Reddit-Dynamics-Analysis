@@ -8,7 +8,44 @@ import community
 import array
 import movement_btw_snapshots as mov
 import try_print as tprint
+import sankey
 from networkx import bipartite
+
+
+def track_sankey(filename):
+    new_str = '&'.replace('&', '\&')
+    ids = {}
+    id = 0
+    labels = []
+    sources = []
+    targets = []
+    values = []
+    with open(filename, 'r') as f:
+        for line in f:
+            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
+                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
+                pass
+            else:
+                newline = line.split('%')
+                amount = newline[0]
+                newline = newline[1].split()
+                clustera = newline[2]
+                clusterb = newline[6]
+                key = clustera + 'A'
+                if key not in ids:
+                    ids[key] = id
+                    id += 1
+                    labels.append(key)
+                sources.append(ids[key])
+                key = clusterb + 'B'
+                if key not in ids:
+                    ids[key] = id
+                    id += 1
+                    labels.append(key)
+                targets.append(ids[key])
+                values.append(amount)
+    sankey.sankey(filename, sources, targets, values, labels)
+
 
 def tracker(filename):
     '''
@@ -57,17 +94,8 @@ Takes a rtf file with the old cluster to new cluster stdout percentages adn conv
         else:
             pos[node[0]] = array.array('f', [1, yRed])
             yRed += yDistRed
-        pie(ax, pos[node[0]])
 
-    # pie(ax, [0.1, 0.1])
-    # nx.draw_networkx_edges(G, pos)
-    # ax.set_aspect('equal')
-    # nx.draw(G, pos=pos, with_labels=False, node_size=25, node_color=node_color, ax=ax)
-    # ax = plt.axes([0, 100, 0, 100])
-
-
-    nx.draw_networkx_edges(G, pos, ax=ax)
-    plt.show()
+    nx.draw(G, pos=pos, with_labels=False, node_size=25, node_color=node_color, ax=ax)
 
 
 def pie(ax, center):
@@ -88,8 +116,8 @@ def main():
     args = parser.parse_args()
     if args.file:
         filename = args.file
-        tracker(filename)
-
+        track_sankey(filename)
+        # tracker(filename)
 
 if __name__ == '__main__':
     main()
