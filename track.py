@@ -77,7 +77,7 @@ def overall_sankey():
     sources = []
     targets = []
     values = []
-    snapshots_per_graph = 4
+    snapshots_per_graph = 3
     prev = None
     out = {}
     not_first = False
@@ -270,4 +270,5 @@ def main():
         # tracker(filename)
 
 if __name__ == '__main__':
-    main()
+    # main()
+    overall_sankey()
