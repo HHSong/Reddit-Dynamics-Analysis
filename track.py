@@ -12,6 +12,43 @@ import sankey
 import string
 from networkx import bipartite
 
+def track_sankey_consolid(filename,thresh):
+    new_str = '&'.replace('&', '\&')
+    ids = {}
+    id = 0
+    labels = []
+    sources = []
+    targets = []
+    values = []
+    with open(filename, 'r') as f:
+        for line in f:
+            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
+                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
+                pass
+            else:
+                newline = line.split('%')
+                amount = newline[0]
+                if float(amount) < thresh:
+                    pass
+                else:
+                    amount = newline[0]
+                    newline = newline[1].split()
+                    clustera = newline[2]
+                    clusterb = newline[6]
+                    key = clustera + 'A'
+                    if key not in ids:
+                        ids[key] = id
+                        id += 1
+                        labels.append(key)
+                    sources.append(ids[key])
+                    key = clusterb + 'B'
+                    if key not in ids:
+                        ids[key] = id
+                        id += 1
+                        labels.append(key)
+                    targets.append(ids[key])
+                    values.append(amount)
+    sankey.sankey(filename, sources, targets, values, labels)
 
 def overall_sankey():
     parts = [
@@ -223,14 +260,14 @@ def pie(ax, center):
 
 
 def main():
-    overall_sankey()
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-f','--file',help = 'Specifies a particular input file to test')
-    # args = parser.parse_args()
-    # if args.file:
-    #     filename = args.file
-    #     track_sankey(filename)
-    #     # tracker(filename)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f','--file',help = 'Specifies a particular input file to test')
+    args = parser.parse_args()
+    if args.file:
+        filename = args.file
+        track_sankey(filename)
+#        track_sankey_consolid(filename,thresh)
+        # tracker(filename)
 
 if __name__ == '__main__':
     main()
