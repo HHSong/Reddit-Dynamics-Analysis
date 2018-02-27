@@ -9,7 +9,9 @@ cat_list = ['pics', 'funny', 'offbeat', 'reddit.com', 'WTF', 'gifs',
             'atheism', 'gaming']
 col_list = ['#ef4f94', '#914fef', '#4f84ef', '#4fe7ef', '#b1ef4f', '#efdc4f',
             '#ef9c4f', '#ef4f4f', '#c4c4c4']
-
+'''
+prints the top categories and their respective percentages for each snapshot
+'''
 def print_topcat(files):
     for file in files:
         print(file)
@@ -20,6 +22,10 @@ def print_topcat(files):
                                     percentage_list))
         print(filtered_list)
 
+
+'''
+Helper function for plot_percentage_bar
+'''
 def make_lists(files, cat_list):
     data_dict = {}
     for cat in cat_list:
@@ -33,6 +39,11 @@ def make_lists(files, cat_list):
                 data_dict[cat][files.index(file)] = percent * 100
     return data_dict
 
+
+'''
+visualizes the percentage frequency distribution of
+interactions in different subreddits across snapshots.
+'''
 def plot_percentage_bar(files, data_dict, cat_list, col_list):
     indices = list(range(len(files)))
     others = []
@@ -58,6 +69,6 @@ def plot_percentage_bar(files, data_dict, cat_list, col_list):
 
 
 if __name__ == '__main__':
-    #print_topcat(files)
+    print_topcat(files)
     data_dict = make_lists(files, cat_list)
     plot_percentage_bar(files, data_dict, cat_list, col_list)

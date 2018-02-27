@@ -2,7 +2,9 @@ import plotly.plotly
 import urllib.request
 import urllib, json
 
-
+'''
+sankey constructor. Helper function for constructing sankey graphs in track.py
+'''
 def sankey(name, sources, targets, values, labels):
     data_trace = dict(
         type='sankey',
@@ -42,7 +44,9 @@ def sankey(name, sources, targets, values, labels):
     fig = dict(data=[data_trace], layout=layout)
     plotly.offline.plot(fig, validate=False)
 
-
+'''
+example function that uses sankey for reference
+'''
 def example():
     url = 'https://raw.githubusercontent.com/plotly/plotly.js/master/test/image/mocks/sankey_energy.json'
     response = urllib.request.urlopen(url)
