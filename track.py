@@ -239,8 +239,8 @@ def track_sankey(filename):
     values = []
     current_key = -1
     volume = 0
-    file_index = to_index(filename) + 1
-    inactive = "inactive" + "#" + parts[file_index][:7]
+    file_index = to_index(filename)
+    inactive = "inactive" + "#" + parts[file_index + 1][:7]
     ids[inactive] = id
     id += 1
     labels.append(inactive)
@@ -252,8 +252,9 @@ def track_sankey(filename):
             newline = newline[1].split()
             clustera = newline[2]
             clusterb = newline[6]
-            key = clustera + 'A'
-            if current_key == key:
+            # in
+            in_key = clustera + '#' + parts[file_index][:7]
+            if current_key == in_key:
                 volume -= amount
             else:
                 if volume > 0:
@@ -262,27 +263,29 @@ def track_sankey(filename):
                     targets.append(ids[inactive])
                     values.append(volume)
                     pass
-                current_key = key
+                current_key = in_key
                 volume = 100 - amount
-            if key not in ids:
-                ids[key] = id
+            if in_key not in ids:
+                ids[in_key] = id
                 id += 1
-                labels.append(key)
-            sources.append(ids[key])
+                labels.append(in_key)
+            sources.append(ids[in_key])
 
-            key = clusterb + 'B'
-            if key not in ids:
-                ids[key] = id
+            # out
+            out_key = clusterb + '#' + parts[file_index + 1][:7]
+            if out_key not in ids:
+                ids[out_key] = id
                 id += 1
-                labels.append(key)
-            targets.append(ids[key])
+                labels.append(out_key)
+            targets.append(ids[out_key])
             values.append(amount)
     if volume > 0:
         # draw sink
         sources.append(ids[current_key])
         targets.append(ids[inactive])
         values.append(volume)
-    sankey.sankey(filename, sources, targets, values, labels, filename)
+    name = parts[file_index-1][:7] + " to " + parts[file_index][:7]
+    sankey.sankey(name, sources, targets, values, labels, name)
 
 
 '''
