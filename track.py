@@ -27,34 +27,47 @@ def track_sankey_low_pass(filename, thresh):
     targets = []
     values = []
     with open(filename, 'r') as f:
+        f = strip_lines(f)
         for line in f:
-            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
-                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
+            newline = line.split('%')
+            amount = newline[0]
+            if float(amount) > thresh:
                 pass
             else:
-                newline = line.split('%')
                 amount = newline[0]
-                if float(amount) > thresh:
-                    pass
-                else:
-                    amount = newline[0]
-                    newline = newline[1].split()
-                    clustera = newline[2]
-                    clusterb = newline[6]
-                    key = clustera + 'A'
-                    if key not in ids:
-                        ids[key] = id
-                        id += 1
-                        labels.append(key)
-                    sources.append(ids[key])
-                    key = clusterb + 'B'
-                    if key not in ids:
-                        ids[key] = id
-                        id += 1
-                        labels.append(key)
-                    targets.append(ids[key])
-                    values.append(amount)
+                newline = newline[1].split()
+                clustera = newline[2]
+                clusterb = newline[6]
+                key = clustera + 'A'
+                if key not in ids:
+                    ids[key] = id
+                    id += 1
+                    labels.append(key)
+                sources.append(ids[key])
+                key = clusterb + 'B'
+                if key not in ids:
+                    ids[key] = id
+                    id += 1
+                    labels.append(key)
+                targets.append(ids[key])
+                values.append(amount)
     sankey.sankey(filename, sources, targets, values, labels, filename+"low-pass")
+
+
+def strip_lines(f):
+    out = []
+    to_skip = True
+    for line in f:
+        if to_skip and "CocoaLigature0" not in line:
+            continue
+        if "CocoaLigature0" in line:
+            to_skip = False
+            i = line.index("CocoaLigature0")
+            out.append(line[i + len("CocoaLigature0") + 2:])
+            continue
+        out.append(line)
+    return out
+
 
 
 def track_sankey_high_pass(filename, thresh):
@@ -66,33 +79,30 @@ def track_sankey_high_pass(filename, thresh):
     targets = []
     values = []
     with open(filename, 'r') as f:
+        f = strip_lines(f)
         for line in f:
-            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
-                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
+            newline = line.split('%')
+            amount = newline[0]
+            if float(amount) < thresh:
                 pass
             else:
-                newline = line.split('%')
                 amount = newline[0]
-                if float(amount) < thresh:
-                    pass
-                else:
-                    amount = newline[0]
-                    newline = newline[1].split()
-                    clustera = newline[2]
-                    clusterb = newline[6]
-                    key = clustera + 'A'
-                    if key not in ids:
-                        ids[key] = id
-                        id += 1
-                        labels.append(key)
-                    sources.append(ids[key])
-                    key = clusterb + 'B'
-                    if key not in ids:
-                        ids[key] = id
-                        id += 1
-                        labels.append(key)
-                    targets.append(ids[key])
-                    values.append(amount)
+                newline = newline[1].split()
+                clustera = newline[2]
+                clusterb = newline[6]
+                key = clustera + 'A'
+                if key not in ids:
+                    ids[key] = id
+                    id += 1
+                    labels.append(key)
+                sources.append(ids[key])
+                key = clusterb + 'B'
+                if key not in ids:
+                    ids[key] = id
+                    id += 1
+                    labels.append(key)
+                targets.append(ids[key])
+                values.append(amount)
     sankey.sankey(filename, sources, targets, values, labels, filename+"high-pass")
 
 '''
@@ -157,10 +167,8 @@ def overall_sankey():
         next_out = {}
 
         with open("Stats/" + rtf, 'r') as f:
+            f = strip_lines(f)
             for line in f:
-                if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
-                        or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
-                    continue
                 newline = line.split('%')
                 amount = newline[0]
                 newline = newline[1].split()
@@ -226,10 +234,8 @@ def track_sankey(filename):
     targets = []
     values = []
     with open(filename, 'r') as f:
+        f = strip_lines(f)
         for line in f:
-            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
-                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
-                continue
             newline = line.split('%')
             amount = newline[0]
             newline = newline[1].split()
@@ -316,7 +322,7 @@ def main():
         #tracker(filename)
         if args.thresh:
             thresh = float(args.thresh)
-            track_sankey_consolid(filename,thresh)
+            # track_sankey_consolid(filename,thresh)
 
 
 '''
@@ -327,6 +333,6 @@ if __name__ == '__main__':
     main()
     # overall_sankey()
     # track_sankey("Stats/K.rtf")
-    filename = "Stats/K.rtf"
+    filename = "Stats/A.rtf"
     # track_sankey_high_pass(filename, 2)
     track_sankey_low_pass(filename, 40)

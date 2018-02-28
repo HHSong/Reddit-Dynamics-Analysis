@@ -35,7 +35,7 @@ def sankey(name, sources, targets, values, labels, filename):
         ))
 
     layout = dict(
-        title=name,
+        title=filename,
         font=dict(
             size=10
         )
@@ -88,4 +88,4 @@ def example():
     )
 
     fig = dict(data=[data_trace], layout=layout)
-    plotly.offline.plot(fig, validate=False)
+    plotly.offline.plot(fig, show_link=False, validate=False)
