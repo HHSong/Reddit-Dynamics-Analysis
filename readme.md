@@ -32,3 +32,11 @@ print_topcat.py:
 
 To run, type "python3 print_topcat.py".
 
+
+get_usernum.py:
+~Returns total number of users in our Reddit dataset.
+
+Run by calling "python3 get_usernum.py"
+
+
+
