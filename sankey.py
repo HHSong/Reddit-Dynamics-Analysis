@@ -3,7 +3,7 @@ import urllib.request
 import urllib, json
 
 
-def sankey(name, sources, targets, values, labels):
+def sankey(name, sources, targets, values, labels, filename):
     data_trace = dict(
         type='sankey',
         width=1118,
@@ -40,7 +40,7 @@ def sankey(name, sources, targets, values, labels):
     )
 
     fig = dict(data=[data_trace], layout=layout)
-    plotly.offline.plot(fig, validate=False)
+    plotly.offline.plot(fig, validate=False, filename=filename+".html")
 
 
 def example():
