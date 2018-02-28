@@ -12,6 +12,29 @@ import sankey
 import string
 from networkx import bipartite
 
+parts = [
+    '2008-07.partition',
+    '2008-11.partition',
+    '2009-03.partition',
+    '2009-07.partition',
+    '2009-11.partition',
+    '2010-03.partition',
+    '2010-07.partition',
+    '2010-11.partition',
+    '2011-03.partition',
+    '2011-07.partition',
+    '2011-11.partition',
+    '2012-03.partition',
+    '2012-07.partition',
+    '2012-11.partition'
+]
+
+
+def to_index(filename):
+    filename = filename[filename.index(".")-1:]
+    return ord(filename[0:1]) - 65
+
+
 '''
 Produces a simple sankey graph showing cluster movement between two consecutive snapshots
 Thresh indicates the threshold. Cluster movement below the threshold will not be
@@ -19,7 +42,6 @@ visualized. Thresh is a percentage, a float between 0 and 100
 Input is a rtf file with the cluster movement percentages
 '''
 def track_sankey_low_pass(filename, thresh):
-    new_str = '&'.replace('&', '\&')
     ids = {}
     id = 0
     labels = []
@@ -50,7 +72,7 @@ def track_sankey_low_pass(filename, thresh):
                     id += 1
                     labels.append(key)
                 targets.append(ids[key])
-                values.append(amount)
+                values.append(float(amount))
     sankey.sankey(filename, sources, targets, values, labels, filename+"low-pass")
 
 
@@ -71,7 +93,6 @@ def strip_lines(f):
 
 
 def track_sankey_high_pass(filename, thresh):
-    new_str = '&'.replace('&', '\&')
     ids = {}
     id = 0
     labels = []
@@ -111,22 +132,6 @@ snapshots. The graph shows the movement of the clusters from
 snapshot to snapshot
 '''
 def overall_sankey():
-    parts = [
-        '2008-07.partition',
-        '2008-11.partition',
-        '2009-03.partition',
-        '2009-07.partition',
-        '2009-11.partition',
-        '2010-03.partition',
-        '2010-07.partition',
-        '2010-11.partition',
-        '2011-03.partition',
-        '2011-07.partition',
-        '2011-11.partition',
-        '2012-03.partition',
-        '2012-07.partition',
-        '2012-11.partition'
-    ]
     rtfs = []
     for letter in string.ascii_uppercase[:13]:
         rtfs.append(letter + ".rtf")
@@ -226,27 +231,45 @@ Produces a simple sankey graph showing cluster movement between two consecutive 
 Input is a rtf file with the cluster movement percentages
 '''
 def track_sankey(filename):
-    new_str = '&'.replace('&', '\&')
     ids = {}
     id = 0
     labels = []
     sources = []
     targets = []
     values = []
+    current_key = -1
+    volume = 0
+    file_index = to_index(filename) + 1
+    inactive = "inactive" + "#" + parts[file_index][:7]
+    ids[inactive] = id
+    id += 1
+    labels.append(inactive)
     with open(filename, 'r') as f:
         f = strip_lines(f)
         for line in f:
             newline = line.split('%')
-            amount = newline[0]
+            amount = float(newline[0])
             newline = newline[1].split()
             clustera = newline[2]
             clusterb = newline[6]
             key = clustera + 'A'
+            if current_key == key:
+                volume -= amount
+            else:
+                if volume > 0:
+                    # draw sink
+                    sources.append(ids[current_key])
+                    targets.append(ids[inactive])
+                    values.append(volume)
+                    pass
+                current_key = key
+                volume = 100 - amount
             if key not in ids:
                 ids[key] = id
                 id += 1
                 labels.append(key)
             sources.append(ids[key])
+
             key = clusterb + 'B'
             if key not in ids:
                 ids[key] = id
@@ -254,6 +277,11 @@ def track_sankey(filename):
                 labels.append(key)
             targets.append(ids[key])
             values.append(amount)
+    if volume > 0:
+        # draw sink
+        sources.append(ids[current_key])
+        targets.append(ids[inactive])
+        values.append(volume)
     sankey.sankey(filename, sources, targets, values, labels, filename)
 
 
@@ -330,9 +358,9 @@ uncomment main() to run functions in main(). Else, it generates the overall
 sankey graph for the first 4 snapshots
 '''
 if __name__ == '__main__':
-    main()
+    # main()
     # overall_sankey()
-    # track_sankey("Stats/K.rtf")
     filename = "Stats/A.rtf"
+    track_sankey(filename)
     # track_sankey_high_pass(filename, 2)
-    track_sankey_low_pass(filename, 40)
+    # track_sankey_low_pass(filename, 40)

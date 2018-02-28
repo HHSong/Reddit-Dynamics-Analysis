@@ -15,8 +15,8 @@ def sankey(name, sources, targets, values, labels, filename):
             y=[0, 1]
         ),
         orientation="h",
-        valueformat=".0f",
-        valuesuffix="TWh",
+        valueformat=".2f",
+        valuesuffix="% movement",
         node=dict(
             pad=15,
             thickness=15,
@@ -42,50 +42,4 @@ def sankey(name, sources, targets, values, labels, filename):
     )
 
     fig = dict(data=[data_trace], layout=layout)
-    plotly.offline.plot(fig, validate=False, filename=filename+".html")
-
-'''
-example function that uses sankey for reference
-'''
-def example():
-    url = 'https://raw.githubusercontent.com/plotly/plotly.js/master/test/image/mocks/sankey_energy.json'
-    response = urllib.request.urlopen(url)
-    data = json.loads(response.read())
-
-    data_trace = dict(
-        type='sankey',
-        width=1118,
-        height=772,
-        domain=dict(
-            x=[0, 1],
-            y=[0, 1]
-        ),
-        orientation="h",
-        valueformat=".0f",
-        valuesuffix="TWh",
-        node=dict(
-            pad=15,
-            thickness=15,
-            line=dict(
-                color="black",
-                width=0.5
-            ),
-            label=data['data'][0]['node']['label'],
-            # color=data['data'][0]['node']['color']
-        ),
-        link=dict(
-            source=data['data'][0]['link']['source'],
-            target=data['data'][0]['link']['target'],
-            value=data['data'][0]['link']['value'],
-            # label=data['data'][0]['link']['label']
-        ))
-
-    layout = dict(
-        title="Reddit",
-        font=dict(
-            size=10
-        )
-    )
-
-    fig = dict(data=[data_trace], layout=layout)
-    plotly.offline.plot(fig, show_link=False, validate=False)
+    plotly.offline.plot(fig,show_link=False, validate=False, filename=filename+".html")
