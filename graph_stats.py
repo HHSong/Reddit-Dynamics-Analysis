@@ -29,6 +29,10 @@ def toXGraph(filename):
             G.node[Slave]['category'] = Most_Common(CatS)
     return G
 
+
+'''
+
+'''
 def get_data(files):
     cluster_lst = []
     deg_assort_lst = []
@@ -51,7 +55,7 @@ def get_data(files):
         deg_assort_lst.append(deg_assortativity)
         cat_assort_lst.append(cat_assortativity)
     return cluster_lst, deg_assort_lst, cat_assort_lst
-
+ 
 def plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst):
     plt.plot(files, cluster_lst, color='#efdc4f', label='Average Clustering Coefficient')
     plt.plot(files, deg_assort_lst, color='#ef9c4f', label='Degree Assortativity')

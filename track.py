@@ -12,7 +12,12 @@ import sankey
 import string
 from networkx import bipartite
 
-
+'''
+Produces a simple sankey graph showing cluster movement between two consecutive snapshots
+Thresh indicates the threshold. Cluster movement below the threshold will not be
+visualized. Thresh is a percentage, a float between 0 and 100
+Input is a rtf file with the cluster movement percentages
+'''
 def track_sankey_low_pass(filename, thresh):
     new_str = '&'.replace('&', '\&')
     ids = {}
@@ -90,6 +95,11 @@ def track_sankey_high_pass(filename, thresh):
                     values.append(amount)
     sankey.sankey(filename, sources, targets, values, labels, filename+"high-pass")
 
+'''
+Main driver that constructs the sankey graph for the first four
+snapshots. The graph shows the movement of the clusters from
+snapshot to snapshot
+'''
 def overall_sankey():
     parts = [
         '2008-07.partition',
@@ -203,7 +213,10 @@ def overall_sankey():
     sankey.sankey("overall", sources, targets, values, labels, filename)
 
 
-
+'''
+Produces a simple sankey graph showing cluster movement between two consecutive snapshots
+Input is a rtf file with the cluster movement percentages
+'''
 def track_sankey(filename):
     new_str = '&'.replace('&', '\&')
     ids = {}
@@ -238,10 +251,11 @@ def track_sankey(filename):
     sankey.sankey(filename, sources, targets, values, labels, filename)
 
 
-def tracker(filename):
-    '''
-Takes a rtf file with the old cluster to new cluster stdout percentages adn converts to a bipartite graph
 '''
+Takes a rtf file with the old cluster to new cluster stdout percentages and converts
+to a bipartite graph, showing the older cluster moving to the new cluster
+'''
+def tracker(filename):
     str = '&'
     new_str = str.replace('&', '\&')
     G=nx.Graph()
@@ -288,27 +302,27 @@ Takes a rtf file with the old cluster to new cluster stdout percentages adn conv
 
     nx.draw(G, pos=pos, with_labels=False, node_size=25, node_color=node_color, ax=ax)
 
-
-def pie(ax, center):
-    labels = 'Frogs', 'Hogs', 'Dogs', 'Logs'
-    sizes = [15, 30, 45, 10]
-    explode = (0, 0.1, 0, 0)
-    ax.pie(sizes,
-           # autopct='%1.1f%%',
-           # shadow=True,
-           startangle=90, radius=0.15, center=center)
-
-
+'''
+Main function for testing graphical display. Reconfigure as necessary.
+'''
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f','--file',help = 'Specifies a particular input file to test')
+    parser.add_argument('-t','--thresh',help = 'Specifies a particular threshold to test')
     args = parser.parse_args()
     if args.file:
         filename = args.file
-        track_sankey(filename)
-#        track_sankey_consolid(filename,thresh)
-        # tracker(filename)
+        #track_sankey(filename)
+        #tracker(filename)
+        if args.thresh:
+            thresh = float(args.thresh)
+            track_sankey_consolid(filename,thresh)
 
+
+'''
+uncomment main() to run functions in main(). Else, it generates the overall
+sankey graph for the first 4 snapshots
+'''
 if __name__ == '__main__':
     main()
     # overall_sankey()
