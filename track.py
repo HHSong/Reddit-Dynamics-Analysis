@@ -284,7 +284,7 @@ def track_sankey(filename):
         sources.append(ids[current_key])
         targets.append(ids[inactive])
         values.append(volume)
-    name = parts[file_index-1][:7] + " to " + parts[file_index][:7]
+    name = parts[file_index][:7] + " to " + parts[file_index + 1][:7]
     sankey.sankey(name, sources, targets, values, labels, name)
 
 
