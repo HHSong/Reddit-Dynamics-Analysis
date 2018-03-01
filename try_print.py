@@ -9,6 +9,7 @@ import processor
 import json
 from collections import Counter
 import numpy as np
+from constants import parts
 
 '''
 Given filename of the snapshot (a partition file), runs louvain's
@@ -81,6 +82,7 @@ def getCategory(partition,G):
     for i in range(0, numClust):
         Val[i] = sorted(Val[i], key=lambda x: x[1], reverse=True)
         print("cluster", i, ": ", Val[i])
+    return Val
 
 
 def getAggregateCats(partition, G, filename):
@@ -155,77 +157,18 @@ def main():
 if __name__ == '__main__':
     #main()
 
-    print("2008-07.partition")
-    capture = toXGraph("2008-07.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2008-11.partition")
-    capture = toXGraph("2008-11.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2009-03.partition")
-    capture = toXGraph("2009-03.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2009-07.partition")
-    capture = toXGraph("2009-07.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2009-11.partition")
-    capture = toXGraph("2009-11.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2010-03.partition")
-    capture = toXGraph("2010-03.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2010-07.partition")
-    capture = toXGraph("2010-07.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2010-11.partition")
-    capture = toXGraph("2010-11.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2011-03.partition")
-    capture = toXGraph("2011-03.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2011-07.partition")
-    capture = toXGraph("2011-07.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2011-11.partition")
-    capture = toXGraph("2011-11.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2012-03.partition")
-    capture = toXGraph("2012-03.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2012-07.partition")
-    capture = toXGraph("2012-07.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    print("2012-11.partition")
-    capture = toXGraph("2012-11.partition")
-    partition = capture[0]
-    G = capture[1]
-    getAvgCat(partition,G)
-    
+    # run for loop instead
+    # partition names are imported from constants.py
 
+    snapshot_category_dict = {}
+    for partition_name in parts:
+        print(partition_name)
+        capture = toXGraph(partition_name)
+        partition = capture[0]
+        G = capture[1]
+        # getAvgCat(partition, G)
+        categories = getCategory(partition, G)
+        snapshot_category_dict[partition_name] = categories
 
-
+    with open("Stats/snapshot_category_dict.json", 'w') as outfile:
+        json.dump(snapshot_category_dict, outfile)

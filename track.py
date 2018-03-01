@@ -12,28 +12,9 @@ import sankey
 import string
 from networkx import bipartite
 import numpy as np
-
-parts = [
-    '2008-07.partition',
-    '2008-11.partition',
-    '2009-03.partition',
-    '2009-07.partition',
-    '2009-11.partition',
-    '2010-03.partition',
-    '2010-07.partition',
-    '2010-11.partition',
-    '2011-03.partition',
-    '2011-07.partition',
-    '2011-11.partition',
-    '2012-03.partition',
-    '2012-07.partition',
-    '2012-11.partition'
-]
-
-
-def to_index(filename):
-    filename = filename[filename.index(".")-1:]
-    return ord(filename[0:1]) - 65
+from constants import parts
+import rtf_broker
+from rtf_broker import strip_lines, to_index
 
 
 '''
@@ -43,89 +24,12 @@ visualized. Thresh is a percentage, a float between 0 and 100
 Input is a rtf file with the cluster movement percentages
 '''
 def track_sankey_low_pass(filename, thresh):
-    ids = {}
-    id = 0
-    labels = []
-    sources = []
-    targets = []
-    values = []
-    with open(filename, 'r') as f:
-        f = strip_lines(f)
-        for line in f:
-            newline = line.split('%')
-            amount = newline[0]
-            if float(amount) > thresh:
-                pass
-            else:
-                amount = newline[0]
-                newline = newline[1].split()
-                clustera = newline[2]
-                clusterb = newline[6]
-                key = clustera + 'A'
-                if key not in ids:
-                    ids[key] = id
-                    id += 1
-                    labels.append(key)
-                sources.append(ids[key])
-                key = clusterb + 'B'
-                if key not in ids:
-                    ids[key] = id
-                    id += 1
-                    labels.append(key)
-                targets.append(ids[key])
-                values.append(float(amount))
-    sankey.sankey(filename, sources, targets, values, labels, filename+"low-pass")
-
-
-def strip_lines(f):
-    out = []
-    to_skip = True
-    for line in f:
-        if to_skip and "CocoaLigature0" not in line:
-            continue
-        if "CocoaLigature0" in line:
-            to_skip = False
-            i = line.index("CocoaLigature0")
-            out.append(line[i + len("CocoaLigature0") + 2:])
-            continue
-        out.append(line)
-    return out
-
+    track_sankey(filename, passing=lambda amount: amount <= thresh, output=filename+"low-pass")
 
 
 def track_sankey_high_pass(filename, thresh):
-    ids = {}
-    id = 0
-    labels = []
-    sources = []
-    targets = []
-    values = []
-    with open(filename, 'r') as f:
-        f = strip_lines(f)
-        for line in f:
-            newline = line.split('%')
-            amount = newline[0]
-            if float(amount) < thresh:
-                pass
-            else:
-                amount = newline[0]
-                newline = newline[1].split()
-                clustera = newline[2]
-                clusterb = newline[6]
-                key = clustera + 'A'
-                if key not in ids:
-                    ids[key] = id
-                    id += 1
-                    labels.append(key)
-                sources.append(ids[key])
-                key = clusterb + 'B'
-                if key not in ids:
-                    ids[key] = id
-                    id += 1
-                    labels.append(key)
-                targets.append(ids[key])
-                values.append(amount)
-    sankey.sankey(filename, sources, targets, values, labels, filename+"high-pass")
+    track_sankey(filename, passing=lambda amount: amount >= thresh, output=filename + "high-pass")
+
 
 '''
 Main driver that constructs the sankey graph for the first four
@@ -133,10 +37,7 @@ snapshots. The graph shows the movement of the clusters from
 snapshot to snapshot
 '''
 def overall_sankey():
-    rtfs = []
-    for letter in string.ascii_uppercase[:13]:
-        rtfs.append(letter + ".rtf")
-    new_str = '&'.replace('&', '\&')
+    rtfs = rtf_broker.rtf_files()
     ids = {}
     id = 0
     labels = []
@@ -148,81 +49,55 @@ def overall_sankey():
     out = {}
     not_first = False
     next_out = {}
-    # for i in range(len(rtfs)):
     for i in range(snapshots_per_graph):
-
         rtf = rtfs[i]
         inactive = "inactive" + "#" + parts[i][:7]
-        ids[inactive] = id
-        id += 1
-        labels.append(inactive)
+        id = id_check(inactive, ids, id, labels)
         # connect inactive
         if prev is not None:
-            sources.append(ids[prev])
-            targets.append(ids[inactive])
-            values.append(1)
+            create_flow(prev, inactive, 1, sources, targets, values, ids)
 
         # connect to inactive
         for key, ended in out.items():
             if not ended:
-                sources.append(ids[key])
-                targets.append(ids[inactive])
-                values.append(1)
+                create_flow(key, inactive, 1, sources, targets, values, ids)
                 out[key] = True
         out = next_out
         next_out = {}
 
-        with open("Stats/" + rtf, 'r') as f:
-            f = strip_lines(f)
-            for line in f:
-                newline = line.split('%')
-                amount = newline[0]
-                newline = newline[1].split()
-                clustera = newline[2]
-                clusterb = newline[6]
-                # in
-                in_key = clustera + '#' + parts[i][:7]
-                if in_key not in ids:
-                    ids[in_key] = id
-                    id += 1
-                    labels.append(in_key)
-                    if not_first:
-                        sources.append(ids[prev])
-                        targets.append(ids[in_key])
-                        values.append(1)
-                if in_key in out:
-                    out[in_key] = True
+        for move in rtf_broker.movements("Stats/" + rtf):
+            clustera = move[0]
+            clusterb = move[1]
+            amount = move[2]
+            # in
+            in_key = clustera + '#' + parts[i][:7]
+            if in_key not in ids:
+                id = id_check(in_key, ids, id, labels)
+                if not_first:
+                    create_flow(prev, in_key, 1, sources, targets, values, ids)
+            if in_key in out:
+                out[in_key] = True
 
-                # out
-                out_key = clusterb + '#' + parts[i+1][:7]
-                if out_key not in ids:
-                    ids[out_key] = id
-                    id += 1
-                    labels.append(out_key)
-                    if i != snapshots_per_graph-1:
-                        next_out[out_key] = False
+            # out
+            out_key = clusterb + '#' + parts[i+1][:7]
+            if out_key not in ids:
+                id = id_check(out_key, ids, id, labels)
+                if i != snapshots_per_graph-1:
+                    next_out[out_key] = False
 
-                sources.append(ids[in_key])
-                targets.append(ids[out_key])
-                values.append(amount)
+            create_flow(in_key, out_key, amount, sources, targets, values, ids)
 
         prev = inactive
         not_first = True
 
     # init last inactive sink
     inactive = "inactive" + "#" + parts[snapshots_per_graph][:7]
-    ids[inactive] = id
-    id += 1
-    labels.append(inactive)
-    sources.append(ids[prev])
-    targets.append(ids[inactive])
-    values.append(1)
+    id = id_check(inactive, ids, id, labels)
+    create_flow(prev, inactive, 1, sources, targets, values, ids)
     # connect
     for key, ended in out.items():
         if not ended:
-            sources.append(ids[key])
-            targets.append(ids[inactive])
-            values.append(1)
+            create_flow(key, inactive, 1, sources, targets, values, ids)
             out[key] = True
     sankey.sankey("overall", sources, targets, values, labels, filename)
 
@@ -231,11 +106,8 @@ def overall_sankey():
 Produces a simple sankey graph showing cluster movement between two consecutive snapshots
 Input is a rtf file with the cluster movement percentages
 '''
-def track_sankey(filename):
-    str = '&'
-    new_str = str.replace('&', '\&')
+def track_sankey(filename, passing=lambda amount: True, output=None):
     ids = {}
-    id = 0
     labels = []
     sources = []
     targets = []
@@ -244,128 +116,67 @@ def track_sankey(filename):
     volume = 0
     file_index = to_index(filename)
     inactive = "inactive" + "#" + parts[file_index + 1][:7]
-    ids[inactive] = id
-    id += 1
-    labels.append(inactive)
-    with open(filename, 'r') as f:
-        f = strip_lines(f)
-        for line in f:
-            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
-                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
-                pass
-            else:
-                newline = line.split('%')
-                amount = float(newline[0])
-                newline = newline[1].split()
-                clustera = newline[2]
-                clusterb = newline[6]
-                # in
-                in_key = clustera + '#' + parts[file_index][:7]
-                if current_key == in_key:
-                    volume -= amount
-                else:
-                    if volume > 0:
-                        # draw sink
-                        sources.append(ids[current_key])
-                        targets.append(ids[inactive])
-                        values.append(volume)
-                        pass
-                    current_key = in_key
-                    volume = 100 - amount
-                if in_key not in ids:
-                    ids[in_key] = id
-                    id += 1
-                    labels.append(in_key)
-                sources.append(ids[in_key])
+    id = id_check(inactive, ids, 0, labels)
+    for move in rtf_broker.movements(filename):
+        clustera = move[0]
+        clusterb = move[1]
+        amount = move[2]
+        if not passing(amount):
+            continue
+        # in
+        in_key = clustera + '#' + parts[file_index][:7]
 
-                # out
-                out_key = clusterb + '#' + parts[file_index + 1][:7]
-                if out_key not in ids:
-                    ids[out_key] = id
-                    id += 1
-                    labels.append(out_key)
-                targets.append(ids[out_key])
-                values.append(amount)
+        # volume control
+        if current_key == in_key:
+            volume -= amount
+        else:
+            if volume > 0:
+                # draw sink
+                create_flow(current_key, inactive, volume, sources, targets, values, ids)
+            current_key = in_key
+            volume = 100 - amount
+
+        # out
+        out_key = clusterb + '#' + parts[file_index + 1][:7]
+        id = id_check(in_key, ids, id, labels)
+        id = id_check(out_key, ids, id, labels)
+        create_flow(in_key, out_key, amount, sources, targets, values, ids)
+
     if volume > 0:
         # draw sink
-        sources.append(ids[current_key])
-        targets.append(ids[inactive])
-        values.append(volume)
-    name = parts[file_index][:7] + " to " + parts[file_index + 1][:7]
-    sankey.sankey(name, sources, targets, values, labels, name)
+        create_flow(current_key, inactive, volume, sources, targets, values, ids)
+    if output is None:
+        name = parts[file_index][:7] + " to " + parts[file_index + 1][:7]
+    else:
+        name = filename
+    return sankey.sankey(name, sources, targets, values, labels, name)
 
+
+def create_flow(in_key, out_key, amount, sources, targets, values, ids):
+    sources.append(ids[in_key])
+    targets.append(ids[out_key])
+    values.append(amount)
+
+
+def id_check(key, ids, id, labels):
+    if key not in ids:
+        ids[key] = id
+        id += 1
+        labels.append(key)
+    return id
 
 '''
 Produces a simple sankey graph showing cluster movement between two consecutive snapshots
 Input is a rtf file with the cluster movement percentages
 '''
 def track_sankey_flow(filename):
-    str = '&'
-    new_str = str.replace('&', '\&')
-    ids = {}
-    id = 0
-    labels = []
-    sources = []
-    targets = []
-    values = []
-    current_key = -1
-    volume = 0
-    file_index = to_index(filename)
-    inactive = "inactive" + "#" + parts[file_index + 1][:7]
-    ids[inactive] = id
-    id += 1
-    labels.append(inactive)
-    with open(filename, 'r') as f:
-        f = strip_lines(f)
-        for line in f:
-            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
-                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
-                pass
-            else:
-                newline = line.split('%')
-                amount = float(newline[0])
-                newline = newline[1].split()
-                clustera = newline[2]
-                clusterb = newline[6]
-                # in
-                in_key = clustera + '#' + parts[file_index][:7]
-                if current_key == in_key:
-                    volume -= amount
-                else:
-                    if volume > 0:
-                        # draw sink
-                        sources.append(ids[current_key])
-                        targets.append(ids[inactive])
-                        values.append(volume)
-                        pass
-                    current_key = in_key
-                    volume = 100 - amount
-                if in_key not in ids:
-                    ids[in_key] = id
-                    id += 1
-                    labels.append(in_key)
-                sources.append(ids[in_key])
-
-                # out
-                out_key = clusterb + '#' + parts[file_index + 1][:7]
-                if out_key not in ids:
-                    ids[out_key] = id
-                    id += 1
-                    labels.append(out_key)
-                targets.append(ids[out_key])
-                values.append(amount)
-    if volume > 0:
-        # draw sink
-        sources.append(ids[current_key])
-        targets.append(ids[inactive])
-        values.append(volume)
-    name = parts[file_index][:7] + " to " + parts[file_index + 1][:7]
-    vals = sankey.sanFlow(name, sources, targets, values, labels, name)
+    vals = track_sankey(filename)
     #for outgoing flow values
  #   flowVals(vals)
 
     #for percentage of inactive breakdown
     in_active(vals)
+
 
 def flowVals(vals):
     vals = vals['source']
@@ -379,6 +190,7 @@ def flowVals(vals):
     print("std: ",n_array.std())
     print("min: ",n_array.min())
     print("max: ",n_array.max())
+
 
 def in_active(vals):
     cluster = vals['target']
@@ -406,28 +218,20 @@ def in_active(vals):
     print("min: ",n_array.min())
     print("max: ",n_array.max())
 
+
 '''
 Takes a rtf file with the old cluster to new cluster stdout percentages and converts
 to a bipartite graph, showing the older cluster moving to the new cluster
 '''
 def tracker(filename):
-    str = '&'
-    new_str = str.replace('&', '\&')
     G=nx.Graph()
-    with open (filename, 'r') as f:
-        for line in  f:
-            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
-                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
-                pass
-            else:
-                newline = line.split('%')
-                amount = newline[0]
-                newline = newline[1].split()
-                clustera = newline[2]
-                clusterb = newline[6]
-                G.add_node(clustera+'A', bipartite = 0, color='blue')
-                G.add_node(clusterb+'B', bipartite = 1, color='red')
-                G.add_weighted_edges_from([(clustera+'A',clusterb+'B',amount)])
+    for move in rtf_broker.movements(filename):
+        clustera = move[0]
+        clusterb = move[1]
+        amount = move[2]
+        G.add_node(clustera+'A', bipartite = 0, color='blue')
+        G.add_node(clusterb+'B', bipartite = 1, color='red')
+        G.add_weighted_edges_from([(clustera+'A',clusterb+'B',amount)])
     node_color = []
     pos = {}
     numBlue = 0
@@ -481,22 +285,27 @@ sankey graph for the first 4 snapshots
 if __name__ == '__main__':
     # main()
     #overall_sankey()
-    filename = "Stats/J.rtf"
+    filenames = [
+        "Stats/" + file for file in rtf_broker.rtf_files()
+    ]
+    filename = filenames[10]
  #   track_sankey(filename)
- 
-    track_sankey_flow("Stats/A.rtf")
-    track_sankey_flow("Stats/B.rtf")
-    track_sankey_flow("Stats/C.rtf")
-    track_sankey_flow("Stats/D.rtf")
-    track_sankey_flow("Stats/E.rtf")
-    track_sankey_flow("Stats/F.rtf")
-    track_sankey_flow("Stats/G.rtf")
-    track_sankey_flow("Stats/H.rtf")
-    track_sankey_flow("Stats/I.rtf")
-    track_sankey_flow("Stats/J.rtf")
-    track_sankey_flow("Stats/K.rtf")
-    track_sankey_flow("Stats/L.rtf")
-    track_sankey_flow("Stats/M.rtf")
+
+    # track_sankey("Stats/B.rtf", passing=lambda amount: amount>8)
+    track_sankey("Stats/B.rtf")
+    # track_sankey_flow("Stats/A.rtf")
+    # track_sankey_flow("Stats/B.rtf")
+    # track_sankey_flow("Stats/C.rtf")
+    # track_sankey_flow("Stats/D.rtf")
+    # track_sankey_flow("Stats/E.rtf")
+    # track_sankey_flow("Stats/F.rtf")
+    # track_sankey_flow("Stats/G.rtf")
+    # track_sankey_flow("Stats/H.rtf")
+    # track_sankey_flow("Stats/I.rtf")
+    # track_sankey_flow("Stats/J.rtf")
+    # track_sankey_flow("Stats/K.rtf")
+    # track_sankey_flow("Stats/L.rtf")
+    # track_sankey_flow("Stats/M.rtf")
  #   track_sankey_flow(filename)
     
     # track_sankey_high_pass(filename, 2)

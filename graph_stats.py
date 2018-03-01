@@ -4,6 +4,9 @@ import os
 import processor as processor
 import networkx as nx
 import matplotlib.pyplot as plt
+import json
+import constants
+import rtf_broker
 from collections import Counter
 
 files = ['2008-07', '2008-11', '2009-03', '2009-07', '2009-11', '2010-03', 
@@ -66,6 +69,32 @@ def plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst):
     plt.show()
 
 
+def category_distribution():
+    snapshot_category_dict = json.load(open("Stats/snapshot_category_dict.json"))
+    rfts = [
+        "Stats/" + file for file in rtf_broker.rtf_files()
+    ]
+    for i in range(len(constants.parts)):
+        snapshotA = constants.parts[i]
+        snapshotB = constants.parts[i+1]
+        rtf_file = rfts[i]
+        categoriesA = snapshot_category_dict[snapshotA]
+        categoriesB = snapshot_category_dict[snapshotB]
+        distribution = []
+        for move in rtf_broker.movements(rtf_file):
+            a = int(move[0])
+            b = int(move[1])
+            catA = categoriesA[a][0][0]
+            catB = categoriesB[b][0][0]
+            percentage = move[2]
+            print(catA + " " + catB)
+            # if catA == catB:
+                # distribution.append(percentage)
+        print(distribution)
+        break
+
+
 if __name__ == '__main__':                    
-    cluster_lst, deg_assort_lst, cat_assort_lst = get_data(files)
-    plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst)           
+    # cluster_lst, deg_assort_lst, cat_assort_lst = get_data(files)
+    # plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst)
+    category_distribution()
