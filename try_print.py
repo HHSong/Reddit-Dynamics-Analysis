@@ -8,6 +8,7 @@ import community
 import processor
 import json
 from collections import Counter
+import numpy as np
 
 '''
 Given filename of the snapshot (a partition file), runs louvain's
@@ -104,6 +105,35 @@ def getAggregateCats(partition, G, filename):
         print(cat + ',{0:d},{1:.2f}%'.format(count, count / total * 100))
 
 
+def getAvgCat(partition,G):
+    numClust = numCluster(partition)
+    categories = [[] for i in range(numClust)]
+    uniq = []
+    for each in partition:
+        categories[partition[each]].append(G.node[each]['category'])
+    for i in range (numClust):
+        flat_list = [item for category in categories[i] for item in category]
+        categories[i] = flat_list
+        uniq.append(set(categories[i]))
+    Total = 0
+    Val = [[] for i in range(numClust)]
+    for i in range (0, numClust):
+        for each in uniq[i]:
+            Total += categories[i].count(each)
+            Val[i].append((each, categories[i].count(each)))
+   # for i in range(0, numClust):
+ #       Val[i] = sorted(Val[i], key=lambda x: x[1], reverse=True)
+ #       print("cluster", i, ": ", Val[i])
+    array = []
+    for each in Val:
+        array.append(len(each))
+
+    n_array = np.array(array)
+    print("mean: ",n_array.mean())
+    print("std: ",n_array.std())
+    print("min: ",n_array.min())
+    print("max: ",n_array.max())
+    
 '''
 Main Function to run tests. Reconfigure as appropriate
 '''
@@ -117,9 +147,85 @@ def main():
         partition = capture[0]
         #print(partition)
         G = capture[1]
-        getCategory(partition,G)
-        getAggregateCats(partition, G, filename)
+ #       getCategory(partition,G)
+ #       getAggregateCats(partition, G, filename)
+        getAvgCat(partition,G)
 
         
 if __name__ == '__main__':
-    main()
+    #main()
+    '''
+    print("2008-07.partition")
+    capture = toXGraph("2008-07.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2008-11.partition")
+    capture = toXGraph("2008-11.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2009-03.partition")
+    capture = toXGraph("2009-03.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2009-07.partition")
+    capture = toXGraph("2009-07.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2009-11.partition")
+    capture = toXGraph("2009-11.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2010-03.partition")
+    capture = toXGraph("2010-03.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2010-07.partition")
+    capture = toXGraph("2010-07.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2010-11.partition")
+    capture = toXGraph("2010-11.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2011-03.partition")
+    capture = toXGraph("2011-03.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2011-07.partition")
+    capture = toXGraph("2011-07.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2011-11.partition")
+    capture = toXGraph("2011-11.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2012-03.partition")
+    capture = toXGraph("2012-03.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2012-07.partition")
+    capture = toXGraph("2012-07.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    print("2012-11.partition")
+    capture = toXGraph("2012-11.partition")
+    partition = capture[0]
+    G = capture[1]
+    getAvgCat(partition,G)
+    '''
+
+
+
