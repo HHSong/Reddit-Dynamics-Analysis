@@ -363,7 +363,7 @@ sankey graph for the first 4 snapshots
 if __name__ == '__main__':
     # main()
     # overall_sankey()
-    filename = "Stats/A.rtf"
+    filename = "Stats/J.rtf"
     track_sankey(filename)
     # track_sankey_high_pass(filename, 2)
     # track_sankey_low_pass(filename, 40)
