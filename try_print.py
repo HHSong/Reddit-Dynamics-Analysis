@@ -154,7 +154,7 @@ def main():
         
 if __name__ == '__main__':
     #main()
-    '''
+
     print("2008-07.partition")
     capture = toXGraph("2008-07.partition")
     partition = capture[0]
@@ -225,7 +225,7 @@ if __name__ == '__main__':
     partition = capture[0]
     G = capture[1]
     getAvgCat(partition,G)
-    '''
+    
 
 
 
