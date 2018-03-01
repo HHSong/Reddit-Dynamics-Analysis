@@ -11,6 +11,7 @@ import try_print as tprint
 import sankey
 import string
 from networkx import bipartite
+import numpy as np
 
 parts = [
     '2008-07.partition',
@@ -231,6 +232,8 @@ Produces a simple sankey graph showing cluster movement between two consecutive 
 Input is a rtf file with the cluster movement percentages
 '''
 def track_sankey(filename):
+    str = '&'
+    new_str = str.replace('&', '\&')
     ids = {}
     id = 0
     labels = []
@@ -247,38 +250,42 @@ def track_sankey(filename):
     with open(filename, 'r') as f:
         f = strip_lines(f)
         for line in f:
-            newline = line.split('%')
-            amount = float(newline[0])
-            newline = newline[1].split()
-            clustera = newline[2]
-            clusterb = newline[6]
-            # in
-            in_key = clustera + '#' + parts[file_index][:7]
-            if current_key == in_key:
-                volume -= amount
+            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
+                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
+                pass
             else:
-                if volume > 0:
-                    # draw sink
-                    sources.append(ids[current_key])
-                    targets.append(ids[inactive])
-                    values.append(volume)
-                    pass
-                current_key = in_key
-                volume = 100 - amount
-            if in_key not in ids:
-                ids[in_key] = id
-                id += 1
-                labels.append(in_key)
-            sources.append(ids[in_key])
+                newline = line.split('%')
+                amount = float(newline[0])
+                newline = newline[1].split()
+                clustera = newline[2]
+                clusterb = newline[6]
+                # in
+                in_key = clustera + '#' + parts[file_index][:7]
+                if current_key == in_key:
+                    volume -= amount
+                else:
+                    if volume > 0:
+                        # draw sink
+                        sources.append(ids[current_key])
+                        targets.append(ids[inactive])
+                        values.append(volume)
+                        pass
+                    current_key = in_key
+                    volume = 100 - amount
+                if in_key not in ids:
+                    ids[in_key] = id
+                    id += 1
+                    labels.append(in_key)
+                sources.append(ids[in_key])
 
-            # out
-            out_key = clusterb + '#' + parts[file_index + 1][:7]
-            if out_key not in ids:
-                ids[out_key] = id
-                id += 1
-                labels.append(out_key)
-            targets.append(ids[out_key])
-            values.append(amount)
+                # out
+                out_key = clusterb + '#' + parts[file_index + 1][:7]
+                if out_key not in ids:
+                    ids[out_key] = id
+                    id += 1
+                    labels.append(out_key)
+                targets.append(ids[out_key])
+                values.append(amount)
     if volume > 0:
         # draw sink
         sources.append(ids[current_key])
@@ -287,6 +294,117 @@ def track_sankey(filename):
     name = parts[file_index][:7] + " to " + parts[file_index + 1][:7]
     sankey.sankey(name, sources, targets, values, labels, name)
 
+
+'''
+Produces a simple sankey graph showing cluster movement between two consecutive snapshots
+Input is a rtf file with the cluster movement percentages
+'''
+def track_sankey_flow(filename):
+    str = '&'
+    new_str = str.replace('&', '\&')
+    ids = {}
+    id = 0
+    labels = []
+    sources = []
+    targets = []
+    values = []
+    current_key = -1
+    volume = 0
+    file_index = to_index(filename)
+    inactive = "inactive" + "#" + parts[file_index + 1][:7]
+    ids[inactive] = id
+    id += 1
+    labels.append(inactive)
+    with open(filename, 'r') as f:
+        f = strip_lines(f)
+        for line in f:
+            if line[0][0] == 'W' or line[0][0] == '-' or line[0][0] == 'B' or line[0][0] == '{' \
+                    or line[0][0] == '}' or line[0][0] == new_str[0] or line == '\n':
+                pass
+            else:
+                newline = line.split('%')
+                amount = float(newline[0])
+                newline = newline[1].split()
+                clustera = newline[2]
+                clusterb = newline[6]
+                # in
+                in_key = clustera + '#' + parts[file_index][:7]
+                if current_key == in_key:
+                    volume -= amount
+                else:
+                    if volume > 0:
+                        # draw sink
+                        sources.append(ids[current_key])
+                        targets.append(ids[inactive])
+                        values.append(volume)
+                        pass
+                    current_key = in_key
+                    volume = 100 - amount
+                if in_key not in ids:
+                    ids[in_key] = id
+                    id += 1
+                    labels.append(in_key)
+                sources.append(ids[in_key])
+
+                # out
+                out_key = clusterb + '#' + parts[file_index + 1][:7]
+                if out_key not in ids:
+                    ids[out_key] = id
+                    id += 1
+                    labels.append(out_key)
+                targets.append(ids[out_key])
+                values.append(amount)
+    if volume > 0:
+        # draw sink
+        sources.append(ids[current_key])
+        targets.append(ids[inactive])
+        values.append(volume)
+    name = parts[file_index][:7] + " to " + parts[file_index + 1][:7]
+    vals = sankey.sanFlow(name, sources, targets, values, labels, name)
+    #for outgoing flow values
+ #   flowVals(vals)
+
+    #for percentage of inactive breakdown
+    in_active(vals)
+
+def flowVals(vals):
+    vals = vals['source']
+    uniq = set(vals)
+    array = []
+    for each in uniq:
+        array.append(vals.count(each))
+
+    n_array = np.array(array)
+    print("mean: ",n_array.mean())
+    print("std: ",n_array.std())
+    print("min: ",n_array.min())
+    print("max: ",n_array.max())
+
+def in_active(vals):
+    cluster = vals['target']
+    vals = vals['value']
+    dicts = dict()
+    for i in range (0,len(cluster)):
+        if cluster[i] in dicts:
+            temp = dicts[cluster[i]]
+            temp.append(vals[i])
+            dicts[cluster[i]] = temp
+        else:
+            dicts[cluster[i]] = [vals[i]]
+
+    index = 0
+    maxLen = 0
+    for each in dicts:
+        tmp = len(dicts[each])
+        if maxLen < tmp:
+            maxLen = tmp
+            index = each
+
+    n_array = np.array(dicts[index])
+    print("mean: ",n_array.mean())
+    print("std: ",n_array.std())
+    print("min: ",n_array.min())
+    print("max: ",n_array.max())
 
 '''
 Takes a rtf file with the old cluster to new cluster stdout percentages and converts
@@ -362,8 +480,24 @@ sankey graph for the first 4 snapshots
 '''
 if __name__ == '__main__':
     # main()
-    # overall_sankey()
+    #overall_sankey()
     filename = "Stats/J.rtf"
-    track_sankey(filename)
+ #   track_sankey(filename)
+ 
+    track_sankey_flow("Stats/A.rtf")
+    track_sankey_flow("Stats/B.rtf")
+    track_sankey_flow("Stats/C.rtf")
+    track_sankey_flow("Stats/D.rtf")
+    track_sankey_flow("Stats/E.rtf")
+    track_sankey_flow("Stats/F.rtf")
+    track_sankey_flow("Stats/G.rtf")
+    track_sankey_flow("Stats/H.rtf")
+    track_sankey_flow("Stats/I.rtf")
+    track_sankey_flow("Stats/J.rtf")
+    track_sankey_flow("Stats/K.rtf")
+    track_sankey_flow("Stats/L.rtf")
+    track_sankey_flow("Stats/M.rtf")
+ #   track_sankey_flow(filename)
+    
     # track_sankey_high_pass(filename, 2)
     # track_sankey_low_pass(filename, 40)
