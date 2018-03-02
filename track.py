@@ -170,7 +170,44 @@ Produces a simple sankey graph showing cluster movement between two consecutive 
 Input is a rtf file with the cluster movement percentages
 '''
 def track_sankey_flow(filename):
-    vals = track_sankey(filename)
+    ids = {}
+    labels = []
+    sources = []
+    targets = []
+    values = []
+    current_key = -1
+    volume = 0
+    file_index = to_index(filename)
+    inactive = "inactive" + "#" + parts[file_index + 1][:7]
+    id = id_check(inactive, ids, 0, labels)
+    for move in rtf_broker.movements(filename):
+        clustera = move[0]
+        clusterb = move[1]
+        amount = move[2]
+        # in
+        in_key = clustera + '#' + parts[file_index][:7]
+
+        # volume control
+        if current_key == in_key:
+            volume -= amount
+        else:
+            if volume > 0:
+                # draw sink
+                create_flow(current_key, inactive, volume, sources, targets, values, ids)
+            current_key = in_key
+            volume = 100 - amount
+
+        # out
+        out_key = clusterb + '#' + parts[file_index + 1][:7]
+        id = id_check(in_key, ids, id, labels)
+        id = id_check(out_key, ids, id, labels)
+        create_flow(in_key, out_key, amount, sources, targets, values, ids)
+
+    if volume > 0:
+        # draw sink
+        create_flow(current_key, inactive, volume, sources, targets, values, ids)
+    name = parts[file_index][:7] + " to " + parts[file_index + 1][:7]
+    vals = sankey.sanFlow(name, sources, targets, values, labels, filename)
     #for outgoing flow values
  #   flowVals(vals)
 

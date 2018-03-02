@@ -24,6 +24,8 @@ def strip_lines(f):
             i = line.index("CocoaLigature0")
             out.append(line[i + len("CocoaLigature0") + 2:])
             continue
+        if "\\" == line[0] or "}" == line[0]:
+            break
         out.append(line)
     return out
 

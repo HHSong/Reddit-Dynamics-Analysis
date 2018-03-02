@@ -153,22 +153,35 @@ def main():
  #       getAggregateCats(partition, G, filename)
         getAvgCat(partition,G)
 
-        
-if __name__ == '__main__':
-    #main()
 
-    # run for loop instead
-    # partition names are imported from constants.py
-
+def store_categories():
     snapshot_category_dict = {}
     for partition_name in parts:
         print(partition_name)
         capture = toXGraph(partition_name)
         partition = capture[0]
         G = capture[1]
-        # getAvgCat(partition, G)
         categories = getCategory(partition, G)
         snapshot_category_dict[partition_name] = categories
 
     with open("Stats/snapshot_category_dict.json", 'w') as outfile:
         json.dump(snapshot_category_dict, outfile)
+
+        
+if __name__ == '__main__':
+    #main()
+
+    # run for loop instead
+    # partition names are imported from constants.py
+        partition_name = parts[9]
+    # for partition_name in parts:
+        print(partition_name)
+        capture = toXGraph(partition_name)
+        partition = capture[0]
+        G = capture[1]
+        # getAvgCat(partition, G)
+
+        categories = getCategory(partition, G)
+        r = numCluster(partition)
+        print(r)
+        print(categories)
