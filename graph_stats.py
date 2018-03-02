@@ -36,16 +36,15 @@ def toXGraph(filename):
             G.node[Slave]['category'] = Most_Common(CatS)
     return G
 
-
-'''
-
-'''
-
-
 def get_data(files):
+    if os.path.isfile('./Stats/grah_stats'):
+        with open('./Stats/grah_stats', 'rb') as f:
+            lst = pickle.load(f)
+        return lst[0], lst[1], lst[2], lst[3]
     cluster_lst = []
     deg_assort_lst = []
     cat_assort_lst = []
+    num_usr_lst = []
     for file in files:
         if not os.path.isfile('./Stats/' + file + '.graph'):
             G = toXGraph(file)
@@ -55,23 +54,36 @@ def get_data(files):
         G = nx.Graph()
         with open('./Stats/' + file + '.graph', 'rb') as f:
             G = pickle.load(f)
-        print(file + ' in progress...', end='', flush=True)
+        print(file + ' in progress...', flush=True)
+        print(' ...calculating Clustering Coefficient...', flush=True)
         avg_clustering = nx.average_clustering(G, weight='weight')
+        print(' ...calculating Degree Assortativity...', flush=True)
         deg_assortativity = nx.degree_assortativity_coefficient(G, weight='weight')
+        print(' ...calculating Assortativity for Top Category...', flush=True)
         cat_assortativity = nx.attribute_assortativity_coefficient(G, 'category')
-        print('done', flush=True)
+        print(' ...calculating Number of Unique Users...', flush=True)
+        tmp_users = []
+        for node in G.nodes():
+            tmp_users.append(node)
+        num_usr_lst.append(len(set(tmp_users)))
         cluster_lst.append(avg_clustering)
         deg_assort_lst.append(deg_assortativity)
         cat_assort_lst.append(cat_assortativity)
-    return cluster_lst, deg_assort_lst, cat_assort_lst
+        print(' ... done', flush=True)
+    with open('./Stats/grah_stats', 'wb') as f:
+        pickle.dump([cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst], f)
+    return cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst
 
-
-def plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst):
-    plt.plot(files, cluster_lst, color='#efdc4f', label='Average Clustering Coefficient')
-    plt.plot(files, deg_assort_lst, color='#ef9c4f', label='Degree Assortativity')
-    plt.plot(files, cat_assort_lst, color='#ef4f4f', label='Assortativity for Most Visited Subreddit')
-    plt.xlabel('snapshots')
-    plt.legend(loc='best', bbox_to_anchor=(1, 1), ncol=1)
+def plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst):
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    ax1.plot(files, cluster_lst, color='#efdc4f', label='Average Clustering Coefficient')
+    ax1.plot(files, deg_assort_lst, color='#ef9c4f', label='Degree Assortativity')
+    ax1.plot(files, cat_assort_lst, color='#ef4f4f', label='Assortativity for Most Visited Subreddit')
+    ax1.set_xlabel('snapshots')
+    ax1.legend(loc='upper left', bbox_to_anchor=(0, 1), ncol=1)
+    ax2.plot(files, num_usr_lst, color='#4a4b4c', label='Number of Users')
+    ax2.legend(loc='upper right', bbox_to_anchor=(1, 1), ncol=1)
     plt.title('Graph Statistics')
     plt.show()
 
@@ -137,9 +149,8 @@ def collect(array, bands):
 
 
 if __name__ == '__main__':
-    # cluster_lst, deg_assort_lst, cat_assort_lst = get_data(files)
-    # plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst)
-
+    # cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst = get_data(files)
+    # plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst)
     rfts = [
         "Stats/" + file for file in rtf_broker.rtf_files()
     ]
