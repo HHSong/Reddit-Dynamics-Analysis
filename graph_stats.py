@@ -12,8 +12,8 @@ import sankey
 from collections import Counter
 
 files = ['2008-07', '2008-11', '2009-03', '2009-07', '2009-11', '2010-03',
-         '2010-07', '2011-03', '2011-07', '2011-11', '2012-03', '2012-07',
-         '2012-11']
+         '2010-07', '2010-11', '2011-03', '2011-07', '2011-11', '2012-03', 
+         '2012-07', '2012-11']
 
 
 def Most_Common(lst):
@@ -149,8 +149,8 @@ def collect(array, bands):
 
 
 if __name__ == '__main__':
-    # cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst = get_data(files)
-    # plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst)
+    cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst = get_data(files)
+    plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst)
     rfts = [
         "Stats/" + file for file in rtf_broker.rtf_files()
     ]
