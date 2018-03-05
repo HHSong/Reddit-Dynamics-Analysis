@@ -14,6 +14,9 @@ from collections import Counter
 files = ['2008-07', '2008-11', '2009-03', '2009-07', '2009-11', '2010-03',
          '2010-07', '2010-11', '2011-03', '2011-07', '2011-11', '2012-03', 
          '2012-07', '2012-11']
+label = ['\'08-07', '\'08-11', '\'09-03', '\'09-07', '\'09-11', '\'10-03',
+         '\'10-07', '\'10-11', '\'11-03', '\'11-07', '\'11-11', '\'12-03', 
+         '\'12-07', '\'12-11']
 
 
 def Most_Common(lst):
@@ -74,17 +77,20 @@ def get_data(files):
         pickle.dump([cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst], f)
     return cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst
 
-def plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst):
+def plot_stats(label, cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst):
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
-    ax1.plot(files, cluster_lst, color='#efdc4f', label='Average Clustering Coefficient')
-    ax1.plot(files, deg_assort_lst, color='#ef9c4f', label='Degree Assortativity')
-    ax1.plot(files, cat_assort_lst, color='#ef4f4f', label='Assortativity for Most Visited Subreddit')
-    ax1.set_xlabel('snapshots')
-    ax1.legend(loc='upper left', bbox_to_anchor=(0, 1), ncol=1)
-    ax2.plot(files, num_usr_lst, color='#4a4b4c', label='Number of Users')
-    ax2.legend(loc='upper right', bbox_to_anchor=(1, 1), ncol=1)
-    plt.title('Graph Statistics')
+    ax1.plot(label, cluster_lst, color='#efdc4f', label='Average Clustering Coefficient')
+    ax1.plot(label, deg_assort_lst, color='#ef9c4f', label='Degree Assortativity')
+    ax1.plot(label, cat_assort_lst, color='#ef4f4f', label='Assortativity for Most Visited Subreddit')
+    ax1.set_xlabel('snapshots', fontsize=14)
+    ax1.legend(loc='lower left', bbox_to_anchor=(0, 0.5), ncol=1, fontsize=14)
+    ax1.tick_params(axis='x', labelsize='large')
+    ax1.tick_params(axis='y', labelsize=14)
+    ax2.plot(label, num_usr_lst, color='#4a4b4c', label='Number of Users')
+    ax2.legend(loc='upper left', bbox_to_anchor=(0, 0.5), ncol=1, fontsize=14)
+    ax2.tick_params(axis='y', labelsize=14)
+    plt.title('Graph Statistics', fontsize=22)
     plt.show()
 
 
@@ -150,7 +156,7 @@ def collect(array, bands):
 
 if __name__ == '__main__':
     cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst = get_data(files)
-    plot_stats(files, cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst)
+    plot_stats(label, cluster_lst, deg_assort_lst, cat_assort_lst, num_usr_lst)
     rfts = [
         "Stats/" + file for file in rtf_broker.rtf_files()
     ]
