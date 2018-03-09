@@ -57,7 +57,7 @@ $\indent \bullet           $   Contains a print function that prints these stati
 $\indent \bullet           $   Contains functions that extract features like the average clustering coefficient, the degree assortativity, the degree assortativity for top categories, and the number of users for each snapshot. \\
 $\indent \bullet           $   Contains functions that graph these statistics all on one graph.\\
 \\
-\textbf{try\_print.py:}
+\textbf{try\_print.py:} \\
 $\indent \bullet           $   Contains a toXGraph function that converts the snapshots (partition files) into an actual Networkx graph. toXGraph runs Louvain's algorithm and returns the clusters of the given snapshot.\\
 $\indent \bullet           $   Contains a numCluster function that given the clusters of  given snapshot, counts the number of clusters in the graph\\
 $\indent \bullet           $   Contains a getCategory function that given the clusters of a given snapshot, prints the unique categories in the snapshot and the number of occurrences of that category. Also prints out the total number of users.\\
@@ -77,7 +77,7 @@ $\indent \bullet           $   Contains a track\_sankey\_flow function that find
 To run, "python3 track.py". The command will output the overall sankey graph shown in the paper, which shows the cluster movement across the first four snapshots. There is also an option to run the other functions using commandline arguments (see the code for further documentation). \\
 \\
 \textbf{sankey.py:}\\
-$\indent \bullet           $   Contains a helper function sankey, which track.py invokes to construct the sankey graphs.
+$\indent \bullet           $   Contains a helper function sankey, which track.py invokes to construct the sankey graphs. \\
 $\indent \bullet           $   Contains a helper function sanFlow, which track.py invokes to get the information to determine the flow statistics that the track\_sankey\_flow function calculates.\\
 \\
 \textbf{print\_topcat.py:}\\
