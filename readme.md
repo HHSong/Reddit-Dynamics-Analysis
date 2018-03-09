@@ -94,6 +94,11 @@ $\indent \bullet           $   Returns total number of users in our Reddit datas
 
 Run by calling "python3 get\_usernum.py"\\
 \\
+\textbf{output Folder:}\\
+$\indent \bullet           $   Contains all the raw partition data from the parsed HTML files.\\
+$\indent \bullet           $   Partition files are our starting point after HTML parsing.
+\\
+\\
 \textbf{Stats Folder:}\\
 $\indent \bullet           $   Contains the intermediate data used for data analysis.\\
 $\indent \bullet           $   For instance, A.rtf represents the raw data for the movement between the first and second snapshots.

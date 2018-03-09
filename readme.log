@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.5.23)  8 MAR 2018 23:30
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.5.23)  8 MAR 2018 23:34
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -998,17 +998,22 @@ Underfull \hbox (badness 10000) in paragraph at lines 29--94
 
 {/usr/local/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 [2]
-Underfull \hbox (badness 10000) in paragraph at lines 95--108
+Underfull \hbox (badness 10000) in paragraph at lines 95--113
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 95--108
+Underfull \hbox (badness 10000) in paragraph at lines 95--113
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 95--108
+Underfull \hbox (badness 10000) in paragraph at lines 95--113
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 95--113
 
  []
 
@@ -1026,7 +1031,7 @@ ix-t1.enc}</usr/local/texlive/2017/texmf-dist/fonts/type1/public/stix/STIXGener
 al-Bold.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/stix/STIXGen
 eral-Regular.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/stix/st
 ix-mathrm.pfb>
-Output written on readme.pdf (3 pages, 99792 bytes).
+Output written on readme.pdf (3 pages, 100238 bytes).
 PDF statistics:
  30 PDF objects out of 1000 (max. 8388607)
  21 compressed objects within 1 object stream
