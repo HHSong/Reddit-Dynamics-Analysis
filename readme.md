@@ -3,6 +3,8 @@
 Department of Computer Science, University of Chicago, Chicago, IL USA\
 {wendyli, haohsiang, mouhao, ravenben}@uchicago.edu
 
+[Read the paper](https://github.com/HHSong/Reddit-Hammer/blob/master/Reddit%20Hammer%20Paper.pdf)
+
 ### ABSTRACT
 Data confidentiality policies of numerous popular social networks have severely limited researchers’ access to large-scale datasets. While there have been some studies pertaining to detailed dynamics of the movement of communities in large online social networks over time, there has been very little research done in terms of monitoring a content dataset and how users’ interest change over time. In this paper, we present the results of analyzing detailed dynamics of Reddit from July 2008 to Jan 2013. We analyze the dynamics at percommunity and network-wide granularities, determining how users’ interests shift over time. We find that, contrary to intuition, Reddit exhibits online social network properties, in which users interact together in different categories.
 
