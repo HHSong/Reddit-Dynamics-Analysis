@@ -1,6 +1,8 @@
 # Reddit Hammer: Tracking Reddit User Interests Over Time
 -- by Wendy Li, Hao-Hsiang Song, Hao Mao, and Ben Y. Zhao
+
 Department of Computer Science, University of Chicago, Chicago, IL USA
+
 {wendyli, haohsiang, mouhao, ravenben}@uchicago.edu
 
 ### ABSTRACT
